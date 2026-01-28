@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monolith Portal - Complete Experience</title>
+<title>Monolith Portal - 3D About Inside</title>
 <style>
 * { 
   margin: 0; 
@@ -37,15 +37,58 @@ body {
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #00ff88;
+/* HTML content that will be rendered to texture */
+#about-content {
+  position: absolute;
+  left: -9999px;
+  width: 1024px;
+  padding: 60px;
+  background: linear-gradient(135deg, #001a0f 0%, #000814 50%, #000 100%);
+  color: #fff;
+  font-family: 'Courier New', monospace;
 }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
-<!-- React, GSAP, Three.js -->
+<!-- Hidden div for About content to be rendered to texture -->
+<div id="about-content">
+  <h1 style="font-size: 48px; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); letter-spacing: 3px;">
+    ABOUT THE MONOLITH
+  </h1>
+  
+  <div style="font-size: 14px; color: #00ff88; margin-bottom: 40px; opacity: 0.7; letter-spacing: 2px;">
+    Beyond the Portal • Another Dimension
+  </div>
+  
+  <p style="margin-bottom: 20px; color: #ccc; line-height: 1.8; font-size: 16px;">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
+    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
+    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+  </p>
+  
+  <p style="margin-bottom: 20px; color: #ccc; line-height: 1.8; font-size: 16px;">
+    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu 
+    fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in 
+    culpa qui officia deserunt mollit anim id est laborum.
+  </p>
+  
+  <div style="margin-top: 40px; padding: 25px; background: rgba(0, 255, 136, 0.1); border: 2px solid rgba(0, 255, 136, 0.4); border-radius: 8px;">
+    <h2 style="font-size: 32px; margin-bottom: 15px; color: #00ff88;">
+      Welcome to the Other Side
+    </h2>
+    <p style="color: #bbb; line-height: 1.8; font-size: 15px;">
+      You have successfully traversed through the dimensional portal. The journey through 
+      space and time has brought you to this new realm of possibilities.
+    </p>
+  </div>
+  
+  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0, 255, 136, 0.3); font-size: 13px; color: #00ff88;">
+    TRANSMISSION COMPLETE • STATUS: STABLE • ENERGY: OPTIMAL
+  </div>
+</div>
+
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -56,11 +99,7 @@ body {
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
-// ============================================
-// MAIN APP COMPONENT
-// ============================================
 const MonolithPortal = () => {
-  // Refs for DOM elements
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const textBottomLeftRef = useRef(null);
@@ -69,31 +108,19 @@ const MonolithPortal = () => {
   const line2Ref = useRef(null);
   const bgImageRef = useRef(null);
   
-  // State
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Check if mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     // ============================================
-    // THREE.JS SETUP
+    // THREE.JS SCENE SETUP
     // ============================================
     const canvas = canvasRef.current;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      75, 
+      80, 
       window.innerWidth / window.innerHeight, 
-      0.1, 
-      1000
+      1, 
+      10000
     );
     
     const renderer = new THREE.WebGLRenderer({ 
@@ -104,362 +131,314 @@ const MonolithPortal = () => {
     });
     
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    camera.position.z = 5;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    camera.position.z = 1000;
+    scene.add(camera);
 
     // ============================================
-    // PORTAL GROUP - All 3D elements
+    // LIGHTING
     // ============================================
-    const portalGroup = new THREE.Group();
-    scene.add(portalGroup);
+    const sceneLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    sceneLight.position.set(0, 0, 1);
+    scene.add(sceneLight);
+
+    // Portal light - GREEN THEME
+    const portalLight = new THREE.PointLight(0x00ff88, 30, 600, 1.7);
+    portalLight.position.set(0, 0, 250);
+    scene.add(portalLight);
+
+    // Back light for About content
+    const backLight = new THREE.PointLight(0x00ff88, 10, 2000);
+    backLight.position.set(0, 0, -800);
+    scene.add(backLight);
 
     // ============================================
-    // MAIN PORTAL RING - Rotating torus
+    // CREATE ABOUT PAGE AS 3D TEXTURE
     // ============================================
-    const ringGeometry = new THREE.TorusGeometry(2.2, 0.15, 16, 100);
-    const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff88,
+    const aboutContentDiv = document.getElementById('about-content');
+    
+    // Use html2canvas alternative - render to canvas
+    const createAboutTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1400;
+      const ctx = canvas.getContext('2d');
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, 1400);
+      gradient.addColorStop(0, '#001a0f');
+      gradient.addColorStop(0.5, '#000814');
+      gradient.addColorStop(1, '#000000');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 1400);
+      
+      // Title
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = 'rgba(0, 255, 136, 0.5)';
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 48px Courier New';
+      ctx.fillText('ABOUT THE MONOLITH', 60, 100);
+      
+      // Subtitle
+      ctx.shadowBlur = 0;
+      ctx.font = '14px Courier New';
+      ctx.fillStyle = 'rgba(0, 255, 136, 0.7)';
+      ctx.fillText('Beyond the Portal • Another Dimension', 60, 140);
+      
+      // Body text
+      ctx.fillStyle = '#cccccc';
+      ctx.font = '16px Courier New';
+      const text1 = 'Lorem ipsum dolor sit amet, consectetur adipiscing';
+      const text2 = 'elit. Sed do eiusmod tempor incididunt ut labore';
+      const text3 = 'et dolore magna aliqua. Ut enim ad minim veniam,';
+      const text4 = 'quis nostrud exercitation ullamco laboris nisi ut';
+      const text5 = 'aliquip ex ea commodo consequat.';
+      
+      ctx.fillText(text1, 60, 200);
+      ctx.fillText(text2, 60, 230);
+      ctx.fillText(text3, 60, 260);
+      ctx.fillText(text4, 60, 290);
+      ctx.fillText(text5, 60, 320);
+      
+      const text6 = 'Duis aute irure dolor in reprehenderit in';
+      const text7 = 'voluptate velit esse cillum dolore eu fugiat';
+      const text8 = 'nulla pariatur. Excepteur sint occaecat cupidatat';
+      const text9 = 'non proident, sunt in culpa qui officia deserunt.';
+      
+      ctx.fillText(text6, 60, 370);
+      ctx.fillText(text7, 60, 400);
+      ctx.fillText(text8, 60, 430);
+      ctx.fillText(text9, 60, 460);
+      
+      // Box
+      ctx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(60, 520, 904, 180);
+      ctx.fillStyle = 'rgba(0, 255, 136, 0.1)';
+      ctx.fillRect(60, 520, 904, 180);
+      
+      // Box title
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 32px Courier New';
+      ctx.fillText('Welcome to the Other Side', 85, 570);
+      
+      // Box text
+      ctx.fillStyle = '#bbbbbb';
+      ctx.font = '15px Courier New';
+      const box1 = 'You have successfully traversed through the';
+      const box2 = 'dimensional portal. The journey through space';
+      const box3 = 'and time has brought you to this new realm.';
+      ctx.fillText(box1, 85, 610);
+      ctx.fillText(box2, 85, 640);
+      ctx.fillText(box3, 85, 670);
+      
+      // Footer line
+      ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(60, 750);
+      ctx.lineTo(964, 750);
+      ctx.stroke();
+      
+      // Footer text
+      ctx.fillStyle = '#00ff88';
+      ctx.font = '13px Courier New';
+      ctx.fillText('TRANSMISSION COMPLETE • STATUS: STABLE • ENERGY: OPTIMAL', 60, 790);
+      
+      return new THREE.CanvasTexture(canvas);
+    };
+
+    const aboutTexture = createAboutTexture();
+    aboutTexture.needsUpdate = true;
+
+    // Create 3D plane for About content
+    const aboutGeometry = new THREE.PlaneBufferGeometry(1800, 2400);
+    const aboutMaterial = new THREE.MeshStandardMaterial({
+      map: aboutTexture,
       transparent: true,
       opacity: 0,
-      side: THREE.DoubleSide
+      emissive: 0x002211,
+      emissiveIntensity: 0.2
     });
-    const mainRing = new THREE.Mesh(ringGeometry, ringMaterial);
-    portalGroup.add(mainRing);
+    
+    const aboutMesh = new THREE.Mesh(aboutGeometry, aboutMaterial);
+    aboutMesh.position.z = -2500; // Far behind portal
+    scene.add(aboutMesh);
 
     // ============================================
-    // SECONDARY GLOW RING - Outer aura
+    // THANOS PORTAL EFFECT - GREEN THEMED
     // ============================================
-    const glowRingGeo = new THREE.TorusGeometry(2.5, 0.08, 12, 100);
-    const glowRingMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+    const portalParticles = [];
+    const smokeParticles = [];
+    let clock;
+
+    const createSmokeTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      
+      const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      gradient.addColorStop(0.5, 'rgba(200, 200, 200, 0.4)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 256, 256);
+      
+      return new THREE.CanvasTexture(canvas);
+    };
+
+    const smokeTexture = createSmokeTexture();
+
+    // Portal geometry - conical spiral
+    const portalGeo = new THREE.PlaneBufferGeometry(350, 350);
+    const portalMaterial = new THREE.MeshStandardMaterial({
+      map: smokeTexture,
       transparent: true,
       opacity: 0
     });
-    const glowRing = new THREE.Mesh(glowRingGeo, glowRingMat);
-    portalGroup.add(glowRing);
+
+    // Create spiral portal particles
+    for (let p = 880; p > 250; p -= 2) {
+      const particle = new THREE.Mesh(portalGeo, portalMaterial);
+      
+      particle.position.set(
+        0.5 * p * Math.cos((4 * p * Math.PI) / 180),
+        0.5 * p * Math.sin((4 * p * Math.PI) / 180),
+        0.1 * p
+      );
+      
+      particle.rotation.z = Math.random() * 360;
+      portalParticles.push(particle);
+      scene.add(particle);
+    }
+
+    // Background smoke
+    const smokeGeo = new THREE.PlaneBufferGeometry(1000, 1000);
+    const smokeMaterial = new THREE.MeshStandardMaterial({
+      map: smokeTexture,
+      transparent: true,
+      opacity: 0.4
+    });
+
+    for (let p = 0; p < 20; p++) {
+      const particle = new THREE.Mesh(smokeGeo, smokeMaterial);
+      particle.position.set(
+        Math.random() * 1000 - 500,
+        Math.random() * 400 - 200,
+        25
+      );
+      particle.rotation.z = Math.random() * 360;
+      smokeParticles.push(particle);
+      scene.add(particle);
+    }
 
     // ============================================
-    // PORTAL CENTER - Glowing disc with inverted gradient
-    // Custom shader for depth effect
+    // WAVE TRANSITION EFFECT
     // ============================================
-    const portalDiscGeo = new THREE.CircleGeometry(2.0, 64);
-    const portalDiscMat = new THREE.ShaderMaterial({
+    const waveGeometry = new THREE.PlaneBufferGeometry(3000, 3000, 60, 60);
+    const waveMaterial = new THREE.ShaderMaterial({
       transparent: true,
       side: THREE.DoubleSide,
       uniforms: {
         time: { value: 0 },
+        progress: { value: 0 },
         opacity: { value: 0 }
       },
       vertexShader: `
+        uniform float time;
+        uniform float progress;
         varying vec2 vUv;
+        varying float vWave;
+        varying float vDist;
+        
         void main() {
           vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vec3 pos = position;
+          
+          float dist = length(uv - vec2(0.5));
+          vDist = dist;
+          
+          // Fluid wave distortion
+          float wave = sin(dist * 15.0 - time * 4.0) * 0.5;
+          wave += sin(dist * 25.0 - time * 6.0) * 0.3;
+          wave += cos(uv.x * 20.0 - time * 3.0) * 0.2;
+          
+          // Tunnel effect - pull toward center and forward
+          float tunnel = progress * 2.0;
+          pos.z += wave * 150.0 * tunnel;
+          pos.z -= dist * 1500.0 * tunnel;
+          pos.x *= 1.0 - tunnel * 0.3;
+          pos.y *= 1.0 - tunnel * 0.3;
+          
+          vWave = wave;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
       `,
       fragmentShader: `
-        uniform float time;
         uniform float opacity;
-        varying vec2 vUv;
-        
-        void main() {
-          vec2 center = vec2(0.5, 0.5);
-          float dist = distance(vUv, center);
-          
-          // Inverted gradient - bright center, darker edges for DEPTH
-          float gradient = smoothstep(0.5, 0.0, dist);
-          
-          // Pulsing glow effect
-          float pulse = sin(time * 1.5) * 0.15 + 0.85;
-          
-          // White center to green-teal edges
-          vec3 centerColor = vec3(1.0, 1.0, 1.0);
-          vec3 edgeColor = vec3(0.0, 1.0, 0.7);
-          vec3 color = mix(edgeColor, centerColor, gradient);
-          
-          // Add depth rings
-          float rings = sin(dist * 20.0 - time * 2.0) * 0.1 + 0.9;
-          
-          float alpha = gradient * pulse * rings * opacity;
-          gl_FragColor = vec4(color, alpha * 0.9);
-        }
-      `
-    });
-    const portalDisc = new THREE.Mesh(portalDiscGeo, portalDiscMat);
-    portalDisc.position.z = -0.2;
-    portalGroup.add(portalDisc);
-
-    // ============================================
-    // ENERGY WAVE RINGS - Multiple rotating layers
-    // ============================================
-    const energyRings = [];
-    for (let i = 0; i < 6; i++) {
-      const ringGeo = new THREE.TorusGeometry(
-        2.2 + i * 0.25, 
-        0.04, 
-        8, 
-        100
-      );
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? 0x00ff88 : 0x66ffaa,
-        transparent: true,
-        opacity: 0
-      });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      
-      energyRings.push({
-        mesh: ring,
-        speed: 0.3 + i * 0.15,
-        direction: i % 2 === 0 ? 1 : -1,
-        phase: i * 0.5
-      });
-      
-      portalGroup.add(ring);
-    }
-
-    // ============================================
-    // MONOLITH TEXT PARTICLES
-    // Vertical column of particles that emerge from monolith
-    // These will form the portal ring
-    // ============================================
-    const textParticleCount = 3000;
-    const textGeometry = new THREE.BufferGeometry();
-    const textPositions = new Float32Array(textParticleCount * 3);
-    const textTargets = new Float32Array(textParticleCount * 3);
-    const textSizes = new Float32Array(textParticleCount);
-
-    for (let i = 0; i < textParticleCount; i++) {
-      const i3 = i * 3;
-      
-      // Starting position - VERTICAL LINE (monolith center)
-      const verticalSpread = 0.05;
-      textPositions[i3] = (Math.random() - 0.5) * verticalSpread;
-      textPositions[i3 + 1] = (i / textParticleCount - 0.5) * 10;
-      textPositions[i3 + 2] = (Math.random() - 0.5) * verticalSpread;
-      
-      // Target position - CIRCULAR RING (portal)
-      const angle = (i / textParticleCount) * Math.PI * 4;
-      const radiusVariation = 2.2 + (Math.random() - 0.5) * 0.3;
-      textTargets[i3] = Math.cos(angle) * radiusVariation;
-      textTargets[i3 + 1] = Math.sin(angle) * radiusVariation;
-      textTargets[i3 + 2] = (Math.random() - 0.5) * 0.3;
-      
-      // Random particle sizes
-      textSizes[i] = Math.random() * 2 + 1;
-    }
-
-    textGeometry.setAttribute('position', new THREE.BufferAttribute(textPositions, 3));
-    textGeometry.setAttribute('target', new THREE.BufferAttribute(textTargets, 3));
-    textGeometry.setAttribute('size', new THREE.BufferAttribute(textSizes, 1));
-
-    // Shader for smooth particle transition
-    const textParticleMat = new THREE.ShaderMaterial({
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      uniforms: {
-        progress: { value: 0 },
-        opacity: { value: 0 },
-        time: { value: 0 }
-      },
-      vertexShader: `
-        attribute vec3 target;
-        attribute float size;
         uniform float progress;
-        uniform float time;
-        varying float vAlpha;
-        varying float vProgress;
+        varying vec2 vUv;
+        varying float vWave;
+        varying float vDist;
         
         void main() {
-          // Smooth interpolation from vertical line to ring
-          vec3 pos = mix(position, target, progress);
+          vec2 center = vec2(0.5);
+          float dist = vDist;
           
-          // Add slight wave motion
-          pos.x += sin(time + position.y * 2.0) * 0.05 * progress;
-          pos.y += cos(time + position.x * 2.0) * 0.05 * progress;
+          // Green gradient tunnel
+          vec3 color1 = vec3(0.0, 1.0, 0.7);
+          vec3 color2 = vec3(0.0, 0.3, 0.2);
+          vec3 color3 = vec3(0.1, 0.8, 0.5);
           
-          vAlpha = progress;
-          vProgress = progress;
+          vec3 color = mix(color2, color1, dist);
+          color = mix(color, color3, abs(vWave));
           
-          vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-          gl_PointSize = size * (300.0 / -mvPosition.z) * (0.5 + progress * 0.5);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform float opacity;
-        uniform float time;
-        varying float vAlpha;
-        varying float vProgress;
-        
-        void main() {
-          vec2 center = gl_PointCoord - vec2(0.5);
-          float dist = length(center);
-          if (dist > 0.5) discard;
+          // Fade edges, keep center transparent to see through
+          float alpha = smoothstep(0.9, 0.3, dist) * opacity;
+          alpha *= smoothstep(0.0, 0.2, dist); // Keep center transparent
           
-          // Smooth circular particle
-          float alpha = (1.0 - dist * 2.0) * vAlpha * opacity;
-          
-          // Color shift from white to green as they form ring
-          vec3 startColor = vec3(0.8, 1.0, 0.9);
-          vec3 endColor = vec3(0.0, 1.0, 0.7);
-          vec3 color = mix(startColor, endColor, vProgress);
-          
-          // Slight sparkle
-          float sparkle = sin(time * 5.0 + gl_FragCoord.x * 0.1) * 0.2 + 0.8;
-          
-          gl_FragColor = vec4(color * sparkle, alpha);
+          gl_FragColor = vec4(color, alpha);
         }
       `
     });
-
-    const textParticles = new THREE.Points(textGeometry, textParticleMat);
-    portalGroup.add(textParticles);
-
-    // ============================================
-    // RING PARTICLES - Swirling around portal ring
-    // ============================================
-    const ringParticleCount = 1500;
-    const ringParticleGeo = new THREE.BufferGeometry();
-    const ringPositions = new Float32Array(ringParticleCount * 3);
-    const ringVelocities = new Float32Array(ringParticleCount * 3);
-
-    for (let i = 0; i < ringParticleCount; i++) {
-      const i3 = i * 3;
-      const angle = (i / ringParticleCount) * Math.PI * 2;
-      const radius = 2.2 + Math.random() * 0.6;
-      
-      ringPositions[i3] = Math.cos(angle) * radius;
-      ringPositions[i3 + 1] = Math.sin(angle) * radius;
-      ringPositions[i3 + 2] = (Math.random() - 0.5) * 0.4;
-      
-      ringVelocities[i3] = (Math.random() - 0.5) * 0.01;
-      ringVelocities[i3 + 1] = (Math.random() - 0.5) * 0.01;
-      ringVelocities[i3 + 2] = (Math.random() - 0.5) * 0.005;
-    }
-
-    ringParticleGeo.setAttribute('position', new THREE.BufferAttribute(ringPositions, 3));
-
-    const ringParticleMat = new THREE.PointsMaterial({
-      color: 0x00ff88,
-      size: 0.04,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
-    });
-
-    const ringParticles = new THREE.Points(ringParticleGeo, ringParticleMat);
-    portalGroup.add(ringParticles);
-
-    // ============================================
-    // SPARKS - Random bright flashes
-    // ============================================
-    const sparkCount = 800;
-    const sparkGeo = new THREE.BufferGeometry();
-    const sparkPositions = new Float32Array(sparkCount * 3);
-    const sparkPhases = new Float32Array(sparkCount);
-
-    for (let i = 0; i < sparkCount; i++) {
-      const i3 = i * 3;
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 2.0 + Math.random() * 0.8;
-      
-      sparkPositions[i3] = Math.cos(angle) * radius;
-      sparkPositions[i3 + 1] = Math.sin(angle) * radius;
-      sparkPositions[i3 + 2] = (Math.random() - 0.5) * 0.3;
-      
-      sparkPhases[i] = Math.random() * Math.PI * 2;
-    }
-
-    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
-    sparkGeo.setAttribute('phase', new THREE.BufferAttribute(sparkPhases, 1));
-
-    const sparkMat = new THREE.ShaderMaterial({
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      uniforms: {
-        time: { value: 0 },
-        opacity: { value: 0 }
-      },
-      vertexShader: `
-        attribute float phase;
-        uniform float time;
-        varying float vAlpha;
-        
-        void main() {
-          vAlpha = abs(sin(time * 3.0 + phase));
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = (3.0 + vAlpha * 2.0) * (300.0 / -mvPosition.z);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform float opacity;
-        varying float vAlpha;
-        
-        void main() {
-          vec2 center = gl_PointCoord - vec2(0.5);
-          float dist = length(center);
-          if (dist > 0.5) discard;
-          
-          float alpha = (1.0 - dist * 2.0) * vAlpha * opacity;
-          gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
-        }
-      `
-    });
-
-    const sparks = new THREE.Points(sparkGeo, sparkMat);
-    portalGroup.add(sparks);
-
-    // Start portal invisible and scaled down
-    portalGroup.scale.set(0, 0, 0);
+    
+    const waveMesh = new THREE.Mesh(waveGeometry, waveMaterial);
+    waveMesh.position.z = -200;
+    scene.add(waveMesh);
 
     // ============================================
     // ANIMATION LOOP
     // ============================================
+    clock = new THREE.Clock();
     let time = 0;
+    
     const animate = () => {
       requestAnimationFrame(animate);
-      time += 0.016;
+      const delta = clock.getDelta();
+      time += delta;
 
-      // Update shader uniforms
-      portalDiscMat.uniforms.time.value = time;
-      textParticleMat.uniforms.time.value = time;
-      sparkMat.uniforms.time.value = time;
-
-      // Rotate main rings
-      mainRing.rotation.z += 0.008;
-      glowRing.rotation.z -= 0.012;
-
-      // Animate energy rings with wave motion
-      energyRings.forEach((ring, index) => {
-        ring.mesh.rotation.z += ring.speed * 0.01 * ring.direction;
-        
-        // Pulsing scale
-        const pulse = 1 + Math.sin(time * 1.5 + ring.phase) * 0.08;
-        ring.mesh.scale.set(pulse, pulse, 1);
+      // Rotate portal particles
+      portalParticles.forEach(p => {
+        p.rotation.z -= delta * 1.5;
       });
 
-      // Rotate ring particles
-      const ringPos = ringParticles.geometry.attributes.position.array;
-      for (let i = 0; i < ringParticleCount; i += 2) {
-        const i3 = i * 3;
-        const x = ringPos[i3];
-        const y = ringPos[i3 + 1];
-        const angle = Math.atan2(y, x) + 0.01;
-        const radius = Math.sqrt(x * x + y * y);
-        ringPos[i3] = Math.cos(angle) * radius;
-        ringPos[i3 + 1] = Math.sin(angle) * radius;
-      }
-      ringParticles.geometry.attributes.position.needsUpdate = true;
+      // Rotate smoke
+      smokeParticles.forEach(p => {
+        p.rotation.z -= delta * 0.2;
+      });
 
-      // Portal breathing effect when fully formed
-      if (portalGroup.scale.x >= 0.98) {
-        const breath = 1 + Math.sin(time * 0.8) * 0.03;
-        portalGroup.scale.set(breath, breath, breath);
+      // Flickering portal light
+      if (Math.random() > 0.9) {
+        portalLight.power = 350 + Math.random() * 500;
       }
+
+      // Update wave
+      waveMaterial.uniforms.time.value = time;
+
+      // Subtle about page animation
+      aboutMesh.rotation.z = Math.sin(time * 0.3) * 0.02;
 
       renderer.render(scene, camera);
     };
@@ -474,7 +453,7 @@ const MonolithPortal = () => {
       scrollTrigger: {
         trigger: containerRef.current,
         start: 'top top',
-        end: '+=600%',
+        end: '+=800%',
         scrub: 2,
         pin: true,
         anticipatePin: 1,
@@ -485,136 +464,157 @@ const MonolithPortal = () => {
     });
 
     // ============================================
-    // FRAME 0 → FRAME 1 (0-33% scroll)
-    // Initial view, slight parallax on background
-    // Text stays in original position
+    // SCROLL PHASES
     // ============================================
     timeline
+      // PHASE 1: Initial parallax (0-20%)
       .to(bgImageRef.current, {
-        scale: 1.1,
+        scale: 1.2,
         duration: 2,
         ease: 'power1.out'
       })
       
-    // ============================================
-    // FRAME 1 → FRAME 2 (33-66% scroll)  
-    // Zoom to bottom of monolith
-    // Text animates to new positions:
-    // - Bottom-left → Middle-right
-    // - Bottom-center (with lines) → Bottom-left
-    // ============================================
+      // PHASE 2: Zoom to person at monolith bottom (20-45%)
       .to(bgImageRef.current, {
-        scale: 4.5,
-        y: '-50%',
-        duration: 3,
+        scale: 5,
+        y: '-58%',
+        duration: 3.5,
         ease: 'power2.inOut'
       }, '+=0.5')
       
-      // Bottom-left text moves to middle-right
       .to(textBottomLeftRef.current, {
-        x: isMobile ? '30vw' : '50vw',
-        y: isMobile ? '-20vh' : '-15vh',
-        fontSize: isMobile ? 'clamp(10px, 2.5vw, 18px)' : 'clamp(12px, 1.8vw, 22px)',
-        duration: 3,
+        x: '50vw',
+        y: '-15vh',
+        fontSize: 'clamp(12px, 1.8vw, 22px)',
+        duration: 3.5,
         ease: 'power2.inOut'
       }, '<')
       
-      // Bottom-center text (with lines) moves to bottom-left
       .to(textBottomCenterRef.current, {
-        x: isMobile ? '-35vw' : '-40vw',
-        y: isMobile ? '5vh' : '8vh',
-        fontSize: isMobile ? 'clamp(9px, 2vw, 16px)' : 'clamp(11px, 1.5vw, 20px)',
-        duration: 3,
+        x: '-40vw',
+        y: '8vh',
+        fontSize: 'clamp(11px, 1.5vw, 20px)',
+        duration: 3.5,
         ease: 'power2.inOut'
       }, '<')
       
-      // Lines collapse
       .to([line1Ref.current, line2Ref.current], {
         scaleX: 0,
         opacity: 0,
-        duration: 2,
+        duration: 2.5,
         ease: 'power2.in'
       }, '<0.5')
       
-    // ============================================
-    // FRAME 2 → FRAME 3 (66-100% scroll)
-    // Extreme zoom to monolith bottom
-    // Text fades out
-    // Vertical text particles emerge and form portal
-    // ============================================
+      // PHASE 3: Extreme zoom + portal forms (45-60%)
       .to(bgImageRef.current, {
-        scale: 10,
-        y: '-65%',
+        scale: 12,
+        y: '-68%',
         duration: 4,
         ease: 'power2.inOut'
       }, '+=0.3')
       
-      // Fade out all text
       .to([textBottomLeftRef.current, textBottomCenterRef.current], {
         opacity: 0,
         duration: 2,
         ease: 'power2.in'
       }, '<')
       
-      // ============================================
-      // PORTAL FORMATION SEQUENCE
-      // ============================================
-      
-      // Text particles start appearing (vertical line)
-      .to(textParticleMat.uniforms.opacity, {
-        value: 1,
-        duration: 1.5,
+      // Portal appears
+      .to(portalParticles.map(p => p.material), {
+        opacity: 0.8,
+        duration: 3,
         ease: 'power2.out'
       }, '-=2')
       
-      // Particles emerge from monolith and form ring
-      .to(textParticleMat.uniforms.progress, {
+      .to(camera.position, {
+        z: 800,
+        duration: 3,
+        ease: 'power2.inOut'
+      }, '<')
+      
+      // PHASE 4: Portal grows, About content becomes visible through it (60-75%)
+      .to(camera.position, {
+        z: 600,
+        duration: 3,
+        ease: 'power2.in'
+      })
+      
+      // About content starts to be visible through portal
+      .to(aboutMaterial, {
+        opacity: 0.6,
+        duration: 2,
+        ease: 'power2.out'
+      }, '<')
+      
+      // PHASE 5: Wave transition starts - entering portal (75-90%)
+      .to(waveMaterial.uniforms.opacity, {
+        value: 1,
+        duration: 1.5,
+        ease: 'power2.out'
+      })
+      
+      .to(waveMaterial.uniforms.progress, {
         value: 1,
         duration: 4,
-        ease: 'power3.inOut'
-      }, '<0.5')
+        ease: 'power2.inOut'
+      }, '<')
       
-      // Portal group scales up
-      .to(portalGroup.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: 3,
-        ease: 'back.out(1.4)'
-      }, '-=3')
+      // Fly through portal
+      .to(camera.position, {
+        z: 200,
+        duration: 4,
+        ease: 'power2.inOut'
+      }, '<')
       
-      // Main portal elements fade in
-      .to([ringMaterial, glowRingMat, portalDiscMat.uniforms.opacity], {
+      // About content becomes clearer
+      .to(aboutMaterial, {
         opacity: 1,
-        value: 1,
+        duration: 3,
+        ease: 'power2.out'
+      }, '<1')
+      
+      // Portal fades as we pass through
+      .to(portalParticles.map(p => p.material), {
+        opacity: 0,
         duration: 2.5,
-        ease: 'power2.out'
-      }, '<0.5')
+        ease: 'power2.in'
+      }, '<1.5')
       
-      // Energy rings appear with stagger
-      .to(energyRings.map(r => r.mesh.material), {
-        opacity: 0.4,
+      .to(bgImageRef.current, {
+        opacity: 0,
         duration: 2,
-        stagger: 0.15,
-        ease: 'power2.out'
-      }, '<0.3')
+        ease: 'power2.in'
+      }, '<')
       
-      // Ring particles appear
-      .to(ringParticleMat, {
-        opacity: 0.8,
-        duration: 2,
-        ease: 'power2.out'
-      }, '<0.2')
+      // PHASE 6: Inside portal - About comes closer (90-100%)
+      .to(camera.position, {
+        z: -500,
+        duration: 4,
+        ease: 'power1.inOut'
+      })
       
-      // Sparks activate
-      .to(sparkMat.uniforms.opacity, {
-        value: 0.9,
+      .to(aboutMesh.position, {
+        z: -800,
+        duration: 4,
+        ease: 'power1.inOut'
+      }, '<')
+      
+      // Wave fades out
+      .to(waveMaterial.uniforms.opacity, {
+        value: 0,
         duration: 2,
+        ease: 'power2.in'
+      }, '<2')
+      
+      // Brighten About page
+      .to(aboutMaterial, {
+        emissiveIntensity: 0.5,
+        duration: 3,
         ease: 'power2.out'
-      }, '<0.3');
+      }, '<');
 
     // ============================================
-    // RESPONSIVE HANDLING
+    // RESIZE HANDLER
     // ============================================
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -631,11 +631,8 @@ const MonolithPortal = () => {
       ScrollTrigger.getAll().forEach(t => t.kill());
       renderer.dispose();
     };
-  }, [isMobile]);
+  }, []);
 
-  // ============================================
-  // RENDER
-  // ============================================
   return (
     <div 
       ref={containerRef} 
@@ -647,9 +644,7 @@ const MonolithPortal = () => {
         backgroundColor: '#000'
       }}
     >
-      {/* ============================================ */}
-      {/* STICKY BACKGROUND IMAGE */}
-      {/* ============================================ */}
+      {/* BACKGROUND IMAGE */}
       <div 
         ref={bgImageRef}
         style={{
@@ -658,7 +653,7 @@ const MonolithPortal = () => {
           left: 0,
           width: '100%',
           height: '100%',
-          transformOrigin: 'center 70%',
+          transformOrigin: 'center 75%',
           willChange: 'transform'
         }}
       >
@@ -669,26 +664,23 @@ const MonolithPortal = () => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center 70%'
+            objectPosition: 'center 75%'
           }}
         />
       </div>
 
-      {/* ============================================ */}
-      {/* FRAME 0-1: BOTTOM LEFT TEXT */}
-      {/* Animates to middle-right in Frame 2 */}
-      {/* ============================================ */}
+      {/* BOTTOM LEFT TEXT */}
       <div
         ref={textBottomLeftRef}
         style={{
           position: 'absolute',
-          bottom: isMobile ? '18%' : '15%',
-          left: isMobile ? '5%' : '8%',
+          bottom: '15%',
+          left: '8%',
           color: '#ffffff',
-          fontSize: isMobile ? 'clamp(10px, 2.2vw, 16px)' : 'clamp(12px, 1.5vw, 18px)',
+          fontSize: 'clamp(12px, 1.5vw, 18px)',
           fontFamily: "'Courier New', monospace",
-          textShadow: '0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(0, 255, 136, 0.3)',
-          maxWidth: isMobile ? '60%' : '350px',
+          textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
+          maxWidth: '350px',
           lineHeight: 1.6,
           zIndex: 10,
           letterSpacing: '0.5px',
@@ -698,25 +690,21 @@ const MonolithPortal = () => {
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.
       </div>
 
-      {/* ============================================ */}
-      {/* FRAME 0-1: BOTTOM CENTER TEXT WITH LINES */}
-      {/* Animates to bottom-left in Frame 2 */}
-      {/* ============================================ */}
+      {/* BOTTOM CENTER TEXT WITH LINES */}
       <div style={{ 
         position: 'absolute', 
-        bottom: isMobile ? '8%' : '10%', 
+        bottom: '10%', 
         left: 0, 
         right: 0, 
         zIndex: 10 
       }}>
-        {/* Left decorative line */}
         <div
           ref={line1Ref}
           style={{
             position: 'absolute',
-            left: isMobile ? '5%' : '8%',
+            left: '8%',
             top: '50%',
-            width: isMobile ? '30%' : '38%',
+            width: '38%',
             height: '2px',
             background: 'linear-gradient(to right, transparent, rgba(0, 255, 136, 0.8))',
             transformOrigin: 'left center',
@@ -725,7 +713,6 @@ const MonolithPortal = () => {
           }}
         />
         
-        {/* Center text */}
         <div
           ref={textBottomCenterRef}
           style={{
@@ -733,26 +720,25 @@ const MonolithPortal = () => {
             left: '50%',
             transform: 'translateX(-50%)',
             color: '#00ff88',
-            fontSize: isMobile ? 'clamp(11px, 3vw, 20px)' : 'clamp(14px, 2vw, 24px)',
+            fontSize: 'clamp(14px, 2vw, 24px)',
             fontFamily: "'Courier New', monospace",
-            textShadow: '0 0 25px rgba(0, 255, 136, 0.8), 0 0 50px rgba(0, 255, 136, 0.4)',
+            textShadow: '0 0 25px rgba(0, 255, 136, 0.8)',
             whiteSpace: 'nowrap',
             fontWeight: 'bold',
-            letterSpacing: isMobile ? '1px' : '2px',
+            letterSpacing: '2px',
             willChange: 'transform, opacity'
           }}
         >
           VIVAMUS SAGITTIS LACUS
         </div>
         
-        {/* Right decorative line */}
         <div
           ref={line2Ref}
           style={{
             position: 'absolute',
-            right: isMobile ? '5%' : '8%',
+            right: '8%',
             top: '50%',
-            width: isMobile ? '30%' : '38%',
+            width: '38%',
             height: '2px',
             background: 'linear-gradient(to left, transparent, rgba(0, 255, 136, 0.8))',
             transformOrigin: 'right center',
@@ -762,9 +748,7 @@ const MonolithPortal = () => {
         />
       </div>
 
-      {/* ============================================ */}
-      {/* THREE.JS CANVAS - Portal rendering */}
-      {/* ============================================ */}
+      {/* THREE.JS CANVAS */}
       <canvas
         ref={canvasRef}
         style={{
@@ -775,14 +759,12 @@ const MonolithPortal = () => {
           height: '100%',
           pointerEvents: 'none',
           zIndex: 20,
-          opacity: scrollProgress > 0.65 ? 1 : 0,
-          transition: 'opacity 0.8s ease-out'
+          opacity: scrollProgress > 0.45 ? 1 : 0,
+          transition: 'opacity 1s ease-out'
         }}
       />
 
-      {/* ============================================ */}
-      {/* VIGNETTE OVERLAY - Atmospheric depth */}
-      {/* ============================================ */}
+      {/* VIGNETTE */}
       <div 
         style={{
           position: 'absolute',
@@ -790,15 +772,15 @@ const MonolithPortal = () => {
           left: 0,
           width: '100%',
           height: '100%',
-          background: 'radial-gradient(ellipse at center 65%, transparent 25%, rgba(0, 20, 10, 0.7) 100%)',
+          background: 'radial-gradient(ellipse at center 70%, transparent 25%, rgba(0, 20, 10, 0.7) 100%)',
           pointerEvents: 'none',
-          zIndex: 5
+          zIndex: 5,
+          opacity: scrollProgress < 0.9 ? 1 : 0,
+          transition: 'opacity 1s'
         }} 
       />
 
-      {/* ============================================ */}
       {/* SCROLL INDICATOR */}
-      {/* ============================================ */}
       {scrollProgress < 0.05 && (
         <div 
           style={{
@@ -806,7 +788,7 @@ const MonolithPortal = () => {
             bottom: '4%',
             right: '5%',
             color: '#00ff88',
-            fontSize: isMobile ? '11px' : '13px',
+            fontSize: '13px',
             fontFamily: "'Courier New', monospace",
             textShadow: '0 0 15px rgba(0, 255, 136, 0.8)',
             zIndex: 30,
@@ -818,9 +800,6 @@ const MonolithPortal = () => {
         </div>
       )}
 
-      {/* ============================================ */}
-      {/* ANIMATIONS */}
-      {/* ============================================ */}
       <style>{`
         @keyframes pulseIndicator {
           0%, 100% { 
@@ -837,9 +816,6 @@ const MonolithPortal = () => {
   );
 };
 
-// ============================================
-// MOUNT APP
-// ============================================
 ReactDOM.createRoot(document.getElementById('root')).render(<MonolithPortal />);
 </script>
 </body>
