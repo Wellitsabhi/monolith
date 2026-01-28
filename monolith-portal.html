@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monolith Portal - 3D About Inside</title>
+<title>Monolith Portal - Complete Experience</title>
 <style>
 * { 
   margin: 0; 
@@ -37,57 +37,72 @@ body {
   border-radius: 4px;
 }
 
-/* HTML content that will be rendered to texture */
-#about-content {
-  position: absolute;
-  left: -9999px;
-  width: 1024px;
-  padding: 60px;
+/* About page container - initially hidden */
+.about-page-2d {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100vh;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
   background: linear-gradient(135deg, #001a0f 0%, #000814 50%, #000 100%);
-  color: #fff;
-  font-family: 'Courier New', monospace;
+  overflow-y: auto;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.about-page-2d.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Animated background grid */
+.grid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes gridMove {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseIndicator {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: translateY(0); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: translateY(-6px); 
+  }
 }
 </style>
 </head>
 <body>
 <div id="root"></div>
-
-<!-- Hidden div for About content to be rendered to texture -->
-<div id="about-content">
-  <h1 style="font-size: 48px; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); letter-spacing: 3px;">
-    ABOUT THE MONOLITH
-  </h1>
-  
-  <div style="font-size: 14px; color: #00ff88; margin-bottom: 40px; opacity: 0.7; letter-spacing: 2px;">
-    Beyond the Portal • Another Dimension
-  </div>
-  
-  <p style="margin-bottom: 20px; color: #ccc; line-height: 1.8; font-size: 16px;">
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
-    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-  </p>
-  
-  <p style="margin-bottom: 20px; color: #ccc; line-height: 1.8; font-size: 16px;">
-    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu 
-    fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in 
-    culpa qui officia deserunt mollit anim id est laborum.
-  </p>
-  
-  <div style="margin-top: 40px; padding: 25px; background: rgba(0, 255, 136, 0.1); border: 2px solid rgba(0, 255, 136, 0.4); border-radius: 8px;">
-    <h2 style="font-size: 32px; margin-bottom: 15px; color: #00ff88;">
-      Welcome to the Other Side
-    </h2>
-    <p style="color: #bbb; line-height: 1.8; font-size: 15px;">
-      You have successfully traversed through the dimensional portal. The journey through 
-      space and time has brought you to this new realm of possibilities.
-    </p>
-  </div>
-  
-  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0, 255, 136, 0.3); font-size: 13px; color: #00ff88;">
-    TRANSMISSION COMPLETE • STATUS: STABLE • ENERGY: OPTIMAL
-  </div>
-</div>
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -99,6 +114,270 @@ body {
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
+// ============================================
+// 2D ABOUT PAGE COMPONENT - Normal scrollable webpage
+// ============================================
+const AboutPage2D = ({ visible }) => {
+  return (
+    <div className={`about-page-2d ${visible ? 'visible' : ''}`}>
+      <div className="grid-bg" />
+      
+      <div style={{
+        maxWidth: '900px',
+        margin: '0 auto',
+        padding: '80px 20px',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        {/* Main heading */}
+        <h1 style={{
+          fontSize: 'clamp(32px, 4vw, 56px)',
+          marginBottom: '20px',
+          color: '#00ff88',
+          textShadow: '0 0 30px rgba(0, 255, 136, 0.5)',
+          letterSpacing: '3px',
+          fontWeight: 'bold',
+          animation: 'fadeInUp 1s ease-out'
+        }}>
+          ABOUT THE MONOLITH
+        </h1>
+
+        {/* Subtitle */}
+        <div style={{
+          fontSize: 'clamp(14px, 1.2vw, 16px)',
+          color: '#00ff88',
+          marginBottom: '40px',
+          opacity: 0.7,
+          letterSpacing: '2px',
+          animation: 'fadeInUp 1s ease-out 0.2s backwards'
+        }}>
+          Beyond the Portal • Another Dimension
+        </div>
+        
+        {/* Content paragraphs */}
+        <div style={{ animation: 'fadeInUp 1s ease-out 0.4s backwards' }}>
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
+            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
+            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+          </p>
+          
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu 
+            fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in 
+            culpa qui officia deserunt mollit anim id est laborum.
+          </p>
+          
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque 
+            laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi 
+            architecto beatae vitae dicta sunt explicabo.
+          </p>
+          
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia 
+            consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro 
+            quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.
+          </p>
+        </div>
+
+        {/* Feature boxes */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+          marginTop: '40px',
+          animation: 'fadeInUp 1s ease-out 0.6s backwards'
+        }}>
+          <div style={{
+            padding: '25px',
+            background: 'rgba(0, 255, 136, 0.05)',
+            border: '1px solid rgba(0, 255, 136, 0.3)',
+            borderRadius: '8px',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 255, 136, 0.1)';
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 255, 136, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 255, 136, 0.05)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          >
+            <h3 style={{
+              fontSize: 'clamp(18px, 2vw, 24px)',
+              marginBottom: '15px',
+              color: '#00ff88'
+            }}>
+              Dimension Alpha
+            </h3>
+            <p style={{ color: '#aaa', fontSize: '14px', lineHeight: 1.6 }}>
+              The first realm beyond the portal. A place where reality bends to the will 
+              of consciousness and time flows differently.
+            </p>
+          </div>
+
+          <div style={{
+            padding: '25px',
+            background: 'rgba(0, 255, 136, 0.05)',
+            border: '1px solid rgba(0, 255, 136, 0.3)',
+            borderRadius: '8px',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 255, 136, 0.1)';
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 255, 136, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 255, 136, 0.05)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          >
+            <h3 style={{
+              fontSize: 'clamp(18px, 2vw, 24px)',
+              marginBottom: '15px',
+              color: '#00ff88'
+            }}>
+              Quantum Matrix
+            </h3>
+            <p style={{ color: '#aaa', fontSize: '14px', lineHeight: 1.6 }}>
+              The underlying structure that connects all dimensions. Navigate through 
+              infinite possibilities and parallel realities.
+            </p>
+          </div>
+        </div>
+
+        {/* Welcome box */}
+        <div style={{
+          marginTop: '60px',
+          padding: '30px',
+          background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%)',
+          border: '2px solid rgba(0, 255, 136, 0.4)',
+          borderRadius: '12px',
+          position: 'relative',
+          overflow: 'hidden',
+          animation: 'fadeInUp 1s ease-out 0.8s backwards'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '100px',
+            height: '100px',
+            background: 'radial-gradient(circle at top right, rgba(0, 255, 136, 0.2), transparent)',
+            pointerEvents: 'none'
+          }} />
+
+          <h2 style={{
+            fontSize: 'clamp(24px, 3vw, 36px)',
+            marginBottom: '20px',
+            color: '#00ff88',
+            textShadow: '0 0 20px rgba(0, 255, 136, 0.3)'
+          }}>
+            Welcome to the Other Side
+          </h2>
+          <p style={{ color: '#bbb', lineHeight: 1.8, fontSize: 'clamp(14px, 1.3vw, 16px)' }}>
+            You have successfully traversed through the dimensional portal. This is your 
+            destination - a new realm of possibilities. The journey through space and time 
+            has brought you here. What you do next is entirely up to your imagination.
+          </p>
+
+          <div style={{
+            marginTop: '20px',
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'center'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '2px',
+              background: 'linear-gradient(to right, #00ff88, transparent)'
+            }} />
+            <span style={{
+              color: '#00ff88',
+              fontSize: '12px',
+              letterSpacing: '2px',
+              opacity: 0.7
+            }}>
+              TRANSMISSION COMPLETE
+            </span>
+            <div style={{
+              flex: 1,
+              height: '2px',
+              background: 'linear-gradient(to right, #00ff88, transparent)'
+            }} />
+          </div>
+        </div>
+
+        {/* Additional scrollable content */}
+        <div style={{ marginTop: '60px', animation: 'fadeInUp 1s ease-out 1s backwards' }}>
+          <h2 style={{
+            fontSize: 'clamp(28px, 3.5vw, 42px)',
+            marginBottom: '30px',
+            color: '#00ff88',
+            borderBottom: '2px solid rgba(0, 255, 136, 0.3)',
+            paddingBottom: '15px'
+          }}>
+            Explore Further
+          </h2>
+          
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Duis mollis, 
+            est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. 
+            Cras mattis consectetur purus sit amet fermentum.
+          </p>
+          
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Donec sed odio dui. Etiam porta sem malesuada magna mollis euismod. Nullam quis 
+            risus eget urna mollis ornare vel eu leo. Morbi leo risus, porta ac consectetur ac, 
+            vestibulum at eros.
+          </p>
+          
+          <p style={{ marginBottom: '24px', color: '#ccc', lineHeight: 1.8, fontSize: 'clamp(14px, 1.5vw, 18px)' }}>
+            Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Cum sociis 
+            natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+          </p>
+        </div>
+
+        {/* Footer info */}
+        <div style={{
+          marginTop: '80px',
+          paddingTop: '30px',
+          borderTop: '1px solid rgba(0, 255, 136, 0.2)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '20px',
+          fontSize: '14px',
+          color: '#666',
+          animation: 'fadeInUp 1s ease-out 1.2s backwards',
+          marginBottom: '40px'
+        }}>
+          <div>
+            <span style={{ color: '#00ff88' }}>Coordinates:</span> Unknown
+          </div>
+          <div>
+            <span style={{ color: '#00ff88' }}>Status:</span> Stable
+          </div>
+          <div>
+            <span style={{ color: '#00ff88' }}>Energy Level:</span> Optimal
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// MAIN PORTAL COMPONENT
+// ============================================
 const MonolithPortal = () => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
@@ -109,6 +388,7 @@ const MonolithPortal = () => {
   const bgImageRef = useRef(null);
   
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [show2DAbout, setShow2DAbout] = useState(false);
 
   useEffect(() => {
     // ============================================
@@ -142,12 +422,10 @@ const MonolithPortal = () => {
     sceneLight.position.set(0, 0, 1);
     scene.add(sceneLight);
 
-    // Portal light - GREEN THEME
     const portalLight = new THREE.PointLight(0x00ff88, 30, 600, 1.7);
     portalLight.position.set(0, 0, 250);
     scene.add(portalLight);
 
-    // Back light for About content
     const backLight = new THREE.PointLight(0x00ff88, 10, 2000);
     backLight.position.set(0, 0, -800);
     scene.add(backLight);
@@ -155,16 +433,12 @@ const MonolithPortal = () => {
     // ============================================
     // CREATE ABOUT PAGE AS 3D TEXTURE
     // ============================================
-    const aboutContentDiv = document.getElementById('about-content');
-    
-    // Use html2canvas alternative - render to canvas
     const createAboutTexture = () => {
       const canvas = document.createElement('canvas');
       canvas.width = 1024;
       canvas.height = 1400;
       const ctx = canvas.getContext('2d');
       
-      // Background gradient
       const gradient = ctx.createLinearGradient(0, 0, 0, 1400);
       gradient.addColorStop(0, '#001a0f');
       gradient.addColorStop(0.5, '#000814');
@@ -172,86 +446,52 @@ const MonolithPortal = () => {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 1024, 1400);
       
-      // Title
       ctx.shadowBlur = 30;
       ctx.shadowColor = 'rgba(0, 255, 136, 0.5)';
       ctx.fillStyle = '#00ff88';
       ctx.font = 'bold 48px Courier New';
       ctx.fillText('ABOUT THE MONOLITH', 60, 100);
       
-      // Subtitle
       ctx.shadowBlur = 0;
       ctx.font = '14px Courier New';
       ctx.fillStyle = 'rgba(0, 255, 136, 0.7)';
       ctx.fillText('Beyond the Portal • Another Dimension', 60, 140);
       
-      // Body text
       ctx.fillStyle = '#cccccc';
       ctx.font = '16px Courier New';
-      const text1 = 'Lorem ipsum dolor sit amet, consectetur adipiscing';
-      const text2 = 'elit. Sed do eiusmod tempor incididunt ut labore';
-      const text3 = 'et dolore magna aliqua. Ut enim ad minim veniam,';
-      const text4 = 'quis nostrud exercitation ullamco laboris nisi ut';
-      const text5 = 'aliquip ex ea commodo consequat.';
+      const lines = [
+        'Lorem ipsum dolor sit amet, consectetur',
+        'adipiscing elit. Sed do eiusmod tempor',
+        'incididunt ut labore et dolore magna aliqua.',
+        '',
+        'Ut enim ad minim veniam, quis nostrud',
+        'exercitation ullamco laboris nisi ut',
+        'aliquip ex ea commodo consequat.'
+      ];
       
-      ctx.fillText(text1, 60, 200);
-      ctx.fillText(text2, 60, 230);
-      ctx.fillText(text3, 60, 260);
-      ctx.fillText(text4, 60, 290);
-      ctx.fillText(text5, 60, 320);
+      lines.forEach((line, i) => {
+        ctx.fillText(line, 60, 200 + i * 30);
+      });
       
-      const text6 = 'Duis aute irure dolor in reprehenderit in';
-      const text7 = 'voluptate velit esse cillum dolore eu fugiat';
-      const text8 = 'nulla pariatur. Excepteur sint occaecat cupidatat';
-      const text9 = 'non proident, sunt in culpa qui officia deserunt.';
-      
-      ctx.fillText(text6, 60, 370);
-      ctx.fillText(text7, 60, 400);
-      ctx.fillText(text8, 60, 430);
-      ctx.fillText(text9, 60, 460);
-      
-      // Box
       ctx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
       ctx.lineWidth = 2;
-      ctx.strokeRect(60, 520, 904, 180);
+      ctx.strokeRect(60, 450, 904, 150);
       ctx.fillStyle = 'rgba(0, 255, 136, 0.1)';
-      ctx.fillRect(60, 520, 904, 180);
+      ctx.fillRect(60, 450, 904, 150);
       
-      // Box title
       ctx.fillStyle = '#00ff88';
       ctx.font = 'bold 32px Courier New';
-      ctx.fillText('Welcome to the Other Side', 85, 570);
+      ctx.fillText('Welcome to the Other Side', 85, 500);
       
-      // Box text
       ctx.fillStyle = '#bbbbbb';
       ctx.font = '15px Courier New';
-      const box1 = 'You have successfully traversed through the';
-      const box2 = 'dimensional portal. The journey through space';
-      const box3 = 'and time has brought you to this new realm.';
-      ctx.fillText(box1, 85, 610);
-      ctx.fillText(box2, 85, 640);
-      ctx.fillText(box3, 85, 670);
-      
-      // Footer line
-      ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(60, 750);
-      ctx.lineTo(964, 750);
-      ctx.stroke();
-      
-      // Footer text
-      ctx.fillStyle = '#00ff88';
-      ctx.font = '13px Courier New';
-      ctx.fillText('TRANSMISSION COMPLETE • STATUS: STABLE • ENERGY: OPTIMAL', 60, 790);
+      ctx.fillText('You have traversed the dimensional portal.', 85, 540);
+      ctx.fillText('Welcome to the new realm of possibilities.', 85, 570);
       
       return new THREE.CanvasTexture(canvas);
     };
 
     const aboutTexture = createAboutTexture();
-    aboutTexture.needsUpdate = true;
-
-    // Create 3D plane for About content
     const aboutGeometry = new THREE.PlaneBufferGeometry(1800, 2400);
     const aboutMaterial = new THREE.MeshStandardMaterial({
       map: aboutTexture,
@@ -262,15 +502,14 @@ const MonolithPortal = () => {
     });
     
     const aboutMesh = new THREE.Mesh(aboutGeometry, aboutMaterial);
-    aboutMesh.position.z = -2500; // Far behind portal
+    aboutMesh.position.z = -2500;
     scene.add(aboutMesh);
 
     // ============================================
-    // THANOS PORTAL EFFECT - GREEN THEMED
+    // THANOS PORTAL - GREEN THEMED
     // ============================================
     const portalParticles = [];
     const smokeParticles = [];
-    let clock;
 
     const createSmokeTexture = () => {
       const canvas = document.createElement('canvas');
@@ -290,8 +529,6 @@ const MonolithPortal = () => {
     };
 
     const smokeTexture = createSmokeTexture();
-
-    // Portal geometry - conical spiral
     const portalGeo = new THREE.PlaneBufferGeometry(350, 350);
     const portalMaterial = new THREE.MeshStandardMaterial({
       map: smokeTexture,
@@ -299,22 +536,18 @@ const MonolithPortal = () => {
       opacity: 0
     });
 
-    // Create spiral portal particles
     for (let p = 880; p > 250; p -= 2) {
       const particle = new THREE.Mesh(portalGeo, portalMaterial);
-      
       particle.position.set(
         0.5 * p * Math.cos((4 * p * Math.PI) / 180),
         0.5 * p * Math.sin((4 * p * Math.PI) / 180),
         0.1 * p
       );
-      
       particle.rotation.z = Math.random() * 360;
       portalParticles.push(particle);
       scene.add(particle);
     }
 
-    // Background smoke
     const smokeGeo = new THREE.PlaneBufferGeometry(1000, 1000);
     const smokeMaterial = new THREE.MeshStandardMaterial({
       map: smokeTexture,
@@ -335,7 +568,7 @@ const MonolithPortal = () => {
     }
 
     // ============================================
-    // WAVE TRANSITION EFFECT
+    // WAVE TRANSITION
     // ============================================
     const waveGeometry = new THREE.PlaneBufferGeometry(3000, 3000, 60, 60);
     const waveMaterial = new THREE.ShaderMaterial({
@@ -360,12 +593,10 @@ const MonolithPortal = () => {
           float dist = length(uv - vec2(0.5));
           vDist = dist;
           
-          // Fluid wave distortion
           float wave = sin(dist * 15.0 - time * 4.0) * 0.5;
           wave += sin(dist * 25.0 - time * 6.0) * 0.3;
           wave += cos(uv.x * 20.0 - time * 3.0) * 0.2;
           
-          // Tunnel effect - pull toward center and forward
           float tunnel = progress * 2.0;
           pos.z += wave * 150.0 * tunnel;
           pos.z -= dist * 1500.0 * tunnel;
@@ -384,10 +615,8 @@ const MonolithPortal = () => {
         varying float vDist;
         
         void main() {
-          vec2 center = vec2(0.5);
           float dist = vDist;
           
-          // Green gradient tunnel
           vec3 color1 = vec3(0.0, 1.0, 0.7);
           vec3 color2 = vec3(0.0, 0.3, 0.2);
           vec3 color3 = vec3(0.1, 0.8, 0.5);
@@ -395,9 +624,8 @@ const MonolithPortal = () => {
           vec3 color = mix(color2, color1, dist);
           color = mix(color, color3, abs(vWave));
           
-          // Fade edges, keep center transparent to see through
           float alpha = smoothstep(0.9, 0.3, dist) * opacity;
-          alpha *= smoothstep(0.0, 0.2, dist); // Keep center transparent
+          alpha *= smoothstep(0.0, 0.2, dist);
           
           gl_FragColor = vec4(color, alpha);
         }
@@ -411,7 +639,7 @@ const MonolithPortal = () => {
     // ============================================
     // ANIMATION LOOP
     // ============================================
-    clock = new THREE.Clock();
+    const clock = new THREE.Clock();
     let time = 0;
     
     const animate = () => {
@@ -419,25 +647,19 @@ const MonolithPortal = () => {
       const delta = clock.getDelta();
       time += delta;
 
-      // Rotate portal particles
       portalParticles.forEach(p => {
         p.rotation.z -= delta * 1.5;
       });
 
-      // Rotate smoke
       smokeParticles.forEach(p => {
         p.rotation.z -= delta * 0.2;
       });
 
-      // Flickering portal light
       if (Math.random() > 0.9) {
         portalLight.power = 350 + Math.random() * 500;
       }
 
-      // Update wave
       waveMaterial.uniforms.time.value = time;
-
-      // Subtle about page animation
       aboutMesh.rotation.z = Math.sin(time * 0.3) * 0.02;
 
       renderer.render(scene, camera);
@@ -453,28 +675,30 @@ const MonolithPortal = () => {
       scrollTrigger: {
         trigger: containerRef.current,
         start: 'top top',
-        end: '+=800%',
+        end: '+=900%',
         scrub: 2,
         pin: true,
         anticipatePin: 1,
         onUpdate: (self) => {
           setScrollProgress(self.progress);
+          
+          // Trigger 2D About page transition at 95%
+          if (self.progress > 0.95) {
+            setShow2DAbout(true);
+          }
         }
       }
     });
 
-    // ============================================
-    // SCROLL PHASES
-    // ============================================
     timeline
-      // PHASE 1: Initial parallax (0-20%)
+      // PHASE 1: Parallax (0-18%)
       .to(bgImageRef.current, {
         scale: 1.2,
         duration: 2,
         ease: 'power1.out'
       })
       
-      // PHASE 2: Zoom to person at monolith bottom (20-45%)
+      // PHASE 2: Zoom to person (18-40%)
       .to(bgImageRef.current, {
         scale: 5,
         y: '-58%',
@@ -485,7 +709,6 @@ const MonolithPortal = () => {
       .to(textBottomLeftRef.current, {
         x: '50vw',
         y: '-15vh',
-        fontSize: 'clamp(12px, 1.8vw, 22px)',
         duration: 3.5,
         ease: 'power2.inOut'
       }, '<')
@@ -493,7 +716,6 @@ const MonolithPortal = () => {
       .to(textBottomCenterRef.current, {
         x: '-40vw',
         y: '8vh',
-        fontSize: 'clamp(11px, 1.5vw, 20px)',
         duration: 3.5,
         ease: 'power2.inOut'
       }, '<')
@@ -505,7 +727,7 @@ const MonolithPortal = () => {
         ease: 'power2.in'
       }, '<0.5')
       
-      // PHASE 3: Extreme zoom + portal forms (45-60%)
+      // PHASE 3: Extreme zoom + portal (40-55%)
       .to(bgImageRef.current, {
         scale: 12,
         y: '-68%',
@@ -519,7 +741,6 @@ const MonolithPortal = () => {
         ease: 'power2.in'
       }, '<')
       
-      // Portal appears
       .to(portalParticles.map(p => p.material), {
         opacity: 0.8,
         duration: 3,
@@ -532,21 +753,20 @@ const MonolithPortal = () => {
         ease: 'power2.inOut'
       }, '<')
       
-      // PHASE 4: Portal grows, About content becomes visible through it (60-75%)
+      // PHASE 4: Portal grows, About visible (55-70%)
       .to(camera.position, {
         z: 600,
         duration: 3,
         ease: 'power2.in'
       })
       
-      // About content starts to be visible through portal
       .to(aboutMaterial, {
         opacity: 0.6,
         duration: 2,
         ease: 'power2.out'
       }, '<')
       
-      // PHASE 5: Wave transition starts - entering portal (75-90%)
+      // PHASE 5: Wave transition - fly through (70-88%)
       .to(waveMaterial.uniforms.opacity, {
         value: 1,
         duration: 1.5,
@@ -559,21 +779,19 @@ const MonolithPortal = () => {
         ease: 'power2.inOut'
       }, '<')
       
-      // Fly through portal
       .to(camera.position, {
-        z: 200,
+        z: 100,
         duration: 4,
         ease: 'power2.inOut'
       }, '<')
       
-      // About content becomes clearer
       .to(aboutMaterial, {
         opacity: 1,
         duration: 3,
         ease: 'power2.out'
       }, '<1')
       
-      // Portal fades as we pass through
+      // Portal disappears
       .to(portalParticles.map(p => p.material), {
         opacity: 0,
         duration: 2.5,
@@ -586,35 +804,42 @@ const MonolithPortal = () => {
         ease: 'power2.in'
       }, '<')
       
-      // PHASE 6: Inside portal - About comes closer (90-100%)
+      // PHASE 6: Approach About, keep distance (88-95%)
       .to(camera.position, {
-        z: -500,
-        duration: 4,
+        z: -1000,
+        duration: 3,
         ease: 'power1.inOut'
       })
       
       .to(aboutMesh.position, {
-        z: -800,
-        duration: 4,
+        z: -1500,
+        duration: 3,
         ease: 'power1.inOut'
       }, '<')
       
-      // Wave fades out
+      // Wave fades
       .to(waveMaterial.uniforms.opacity, {
         value: 0,
         duration: 2,
         ease: 'power2.in'
-      }, '<2')
+      }, '<1')
       
-      // Brighten About page
+      // PHASE 7: Final fade to 2D (95-100%)
+      // 3D scene fades out as 2D page fades in
       .to(aboutMaterial, {
-        emissiveIntensity: 0.5,
-        duration: 3,
-        ease: 'power2.out'
+        opacity: 0,
+        duration: 2,
+        ease: 'power2.in'
+      })
+      
+      .to(canvas, {
+        opacity: 0,
+        duration: 2,
+        ease: 'power2.in'
       }, '<');
 
     // ============================================
-    // RESIZE HANDLER
+    // RESIZE
     // ============================================
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -623,9 +848,6 @@ const MonolithPortal = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    // ============================================
-    // CLEANUP
-    // ============================================
     return () => {
       window.removeEventListener('resize', handleResize);
       ScrollTrigger.getAll().forEach(t => t.kill());
@@ -634,185 +856,171 @@ const MonolithPortal = () => {
   }, []);
 
   return (
-    <div 
-      ref={containerRef} 
-      style={{ 
-        height: '100vh', 
-        width: '100vw',
-        position: 'relative', 
-        overflow: 'hidden',
-        backgroundColor: '#000'
-      }}
-    >
-      {/* BACKGROUND IMAGE */}
+    <>
       <div 
-        ref={bgImageRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          transformOrigin: 'center 75%',
-          willChange: 'transform'
+        ref={containerRef} 
+        style={{ 
+          height: '100vh', 
+          width: '100vw',
+          position: 'relative', 
+          overflow: 'hidden',
+          backgroundColor: '#000'
         }}
       >
-        <img 
-          src="monolith.jpg"
-          alt="Monolith"
+        <div 
+          ref={bgImageRef}
           style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center 75%'
-          }}
-        />
-      </div>
-
-      {/* BOTTOM LEFT TEXT */}
-      <div
-        ref={textBottomLeftRef}
-        style={{
-          position: 'absolute',
-          bottom: '15%',
-          left: '8%',
-          color: '#ffffff',
-          fontSize: 'clamp(12px, 1.5vw, 18px)',
-          fontFamily: "'Courier New', monospace",
-          textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
-          maxWidth: '350px',
-          lineHeight: 1.6,
-          zIndex: 10,
-          letterSpacing: '0.5px',
-          willChange: 'transform, opacity'
-        }}
-      >
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.
-      </div>
-
-      {/* BOTTOM CENTER TEXT WITH LINES */}
-      <div style={{ 
-        position: 'absolute', 
-        bottom: '10%', 
-        left: 0, 
-        right: 0, 
-        zIndex: 10 
-      }}>
-        <div
-          ref={line1Ref}
-          style={{
-            position: 'absolute',
-            left: '8%',
-            top: '50%',
-            width: '38%',
-            height: '2px',
-            background: 'linear-gradient(to right, transparent, rgba(0, 255, 136, 0.8))',
-            transformOrigin: 'left center',
-            boxShadow: '0 0 10px rgba(0, 255, 136, 0.6)',
+            transformOrigin: 'center 75%',
             willChange: 'transform'
           }}
-        />
-        
+        >
+          <img 
+            src="monolith.jpg"
+            alt="Monolith"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 75%'
+            }}
+          />
+        </div>
+
         <div
-          ref={textBottomCenterRef}
+          ref={textBottomLeftRef}
           style={{
             position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: '#00ff88',
-            fontSize: 'clamp(14px, 2vw, 24px)',
+            bottom: '15%',
+            left: '8%',
+            color: '#ffffff',
+            fontSize: 'clamp(12px, 1.5vw, 18px)',
             fontFamily: "'Courier New', monospace",
-            textShadow: '0 0 25px rgba(0, 255, 136, 0.8)',
-            whiteSpace: 'nowrap',
-            fontWeight: 'bold',
-            letterSpacing: '2px',
+            textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
+            maxWidth: '350px',
+            lineHeight: 1.6,
+            zIndex: 10,
+            letterSpacing: '0.5px',
             willChange: 'transform, opacity'
           }}
         >
-          VIVAMUS SAGITTIS LACUS
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.
         </div>
-        
-        <div
-          ref={line2Ref}
+
+        <div style={{ 
+          position: 'absolute', 
+          bottom: '10%', 
+          left: 0, 
+          right: 0, 
+          zIndex: 10 
+        }}>
+          <div
+            ref={line1Ref}
+            style={{
+              position: 'absolute',
+              left: '8%',
+              top: '50%',
+              width: '38%',
+              height: '2px',
+              background: 'linear-gradient(to right, transparent, rgba(0, 255, 136, 0.8))',
+              transformOrigin: 'left center',
+              boxShadow: '0 0 10px rgba(0, 255, 136, 0.6)',
+              willChange: 'transform'
+            }}
+          />
+          
+          <div
+            ref={textBottomCenterRef}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: '#00ff88',
+              fontSize: 'clamp(14px, 2vw, 24px)',
+              fontFamily: "'Courier New', monospace",
+              textShadow: '0 0 25px rgba(0, 255, 136, 0.8)',
+              whiteSpace: 'nowrap',
+              fontWeight: 'bold',
+              letterSpacing: '2px',
+              willChange: 'transform, opacity'
+            }}
+          >
+            VIVAMUS SAGITTIS LACUS
+          </div>
+          
+          <div
+            ref={line2Ref}
+            style={{
+              position: 'absolute',
+              right: '8%',
+              top: '50%',
+              width: '38%',
+              height: '2px',
+              background: 'linear-gradient(to left, transparent, rgba(0, 255, 136, 0.8))',
+              transformOrigin: 'right center',
+              boxShadow: '0 0 10px rgba(0, 255, 136, 0.6)',
+              willChange: 'transform'
+            }}
+          />
+        </div>
+
+        <canvas
+          ref={canvasRef}
           style={{
             position: 'absolute',
-            right: '8%',
-            top: '50%',
-            width: '38%',
-            height: '2px',
-            background: 'linear-gradient(to left, transparent, rgba(0, 255, 136, 0.8))',
-            transformOrigin: 'right center',
-            boxShadow: '0 0 10px rgba(0, 255, 136, 0.6)',
-            willChange: 'transform'
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 20,
+            opacity: scrollProgress > 0.4 ? 1 : 0,
+            transition: 'opacity 1s ease-out'
           }}
         />
-      </div>
 
-      {/* THREE.JS CANVAS */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none',
-          zIndex: 20,
-          opacity: scrollProgress > 0.45 ? 1 : 0,
-          transition: 'opacity 1s ease-out'
-        }}
-      />
-
-      {/* VIGNETTE */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'radial-gradient(ellipse at center 70%, transparent 25%, rgba(0, 20, 10, 0.7) 100%)',
-          pointerEvents: 'none',
-          zIndex: 5,
-          opacity: scrollProgress < 0.9 ? 1 : 0,
-          transition: 'opacity 1s'
-        }} 
-      />
-
-      {/* SCROLL INDICATOR */}
-      {scrollProgress < 0.05 && (
         <div 
           style={{
             position: 'absolute',
-            bottom: '4%',
-            right: '5%',
-            color: '#00ff88',
-            fontSize: '13px',
-            fontFamily: "'Courier New', monospace",
-            textShadow: '0 0 15px rgba(0, 255, 136, 0.8)',
-            zIndex: 30,
-            animation: 'pulseIndicator 2s ease-in-out infinite',
-            letterSpacing: '2px'
-          }}
-        >
-          ▼ SCROLL TO ENTER ▼
-        </div>
-      )}
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'radial-gradient(ellipse at center 70%, transparent 25%, rgba(0, 20, 10, 0.7) 100%)',
+            pointerEvents: 'none',
+            zIndex: 5,
+            opacity: scrollProgress < 0.9 ? 1 : 0,
+            transition: 'opacity 1s'
+          }} 
+        />
 
-      <style>{`
-        @keyframes pulseIndicator {
-          0%, 100% { 
-            opacity: 0.4; 
-            transform: translateY(0); 
-          }
-          50% { 
-            opacity: 1; 
-            transform: translateY(-6px); 
-          }
-        }
-      `}</style>
-    </div>
+        {scrollProgress < 0.05 && (
+          <div 
+            style={{
+              position: 'absolute',
+              bottom: '4%',
+              right: '5%',
+              color: '#00ff88',
+              fontSize: '13px',
+              fontFamily: "'Courier New', monospace",
+              textShadow: '0 0 15px rgba(0, 255, 136, 0.8)',
+              zIndex: 30,
+              animation: 'pulseIndicator 2s ease-in-out infinite',
+              letterSpacing: '2px'
+            }}
+          >
+            ▼ SCROLL TO ENTER ▼
+          </div>
+        )}
+      </div>
+
+      {/* 2D ABOUT PAGE - Fades in at end */}
+      <AboutPage2D visible={show2DAbout} />
+    </>
   );
 };
 
