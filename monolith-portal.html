@@ -51,6 +51,7 @@ const MonolithPortal = () => {
   const line1Ref = useRef(null);
   const line2Ref = useRef(null);
   const bgImageRef = useRef(null);
+  const whiteOverlayRef = useRef(null);
   
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -70,12 +71,12 @@ const MonolithPortal = () => {
     gsap.ticker.lagSmoothing(0);
 
     // ============================================
-    // COLOR PALETTE - HYDRA DARK GREEN
+    // COLOR PALETTE
     // ============================================
     const colors = {
-      primary: 0x3da67a,      // Atmospheric green
-      glow: 0x5fcf9f,         // Lighter glow
-      dark: 0x1a4a35,         // Dark green
+      primary: 0x3da67a,
+      glow: 0x5fcf9f,
+      dark: 0x1a4a35,
       white: 0xffffff,
       spark: 0x8fffcc
     };
@@ -110,11 +111,11 @@ const MonolithPortal = () => {
     scene.add(ambientLight);
 
     const portalLight = new THREE.PointLight(colors.glow, 0, 800, 1.5);
-    portalLight.position.set(0, 0, 100);
+    portalLight.position.set(150, -100, 100); // Positioned where portal will form (right of monolith base)
     scene.add(portalLight);
 
     const centerLight = new THREE.PointLight(0xffffff, 0, 400, 2);
-    centerLight.position.set(0, 0, 50);
+    centerLight.position.set(150, -100, 50);
     scene.add(centerLight);
 
     // ============================================
@@ -148,14 +149,45 @@ const MonolithPortal = () => {
       return new THREE.CanvasTexture(c);
     };
 
+    // Create character texture
+    const createCharacterTexture = (char) => {
+      const c = document.createElement('canvas');
+      c.width = 64;
+      c.height = 64;
+      const ctx = c.getContext('2d');
+      
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px Courier New';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(char, 32, 32);
+      
+      ctx.shadowBlur = 6;
+      ctx.fillText(char, 32, 32);
+      
+      return new THREE.CanvasTexture(c);
+    };
+
     const smokeTexture = createSmokeTexture();
     const sparkTexture = createSparkTexture();
 
+    // Characters pool
+    const characters = 'MOTIONMODEXYSMOTIONMODEXYSMOTIONMODEXYSMOTIONMODEXYSMOTIONMODEXYSMOTIONMODEXYSMOTIONMODEXYSMOTIONMODEXYS'.split('');
+
+    // Pre-create textures
+    const charTextures = {};
+    characters.forEach(char => {
+      charTextures[char] = createCharacterTexture(char);
+    });
+
     // ============================================
-    // PORTAL GROUP
+    // PORTAL GROUP - Positioned to right of monolith base (where man stands)
     // ============================================
     const portalGroup = new THREE.Group();
-    portalGroup.position.z = 50;
+    portalGroup.position.set(150, -80, 50); // Right side, lower area
     scene.add(portalGroup);
 
     // ============================================
@@ -182,9 +214,9 @@ const MonolithPortal = () => {
     portalGroup.add(glowRing);
 
     // ============================================
-    // CENTER GLOW (WHITE DEPTH)
+    // CENTER GLOW - Start at portal size, no ripple
     // ============================================
-    const centerGlowGeo = new THREE.CircleBufferGeometry(180, 64);
+    const centerGlowGeo = new THREE.CircleBufferGeometry(200, 64); // Same size as portal
     const centerGlowMat = new THREE.ShaderMaterial({
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -207,22 +239,22 @@ const MonolithPortal = () => {
         void main() {
           float dist = length(vUv - vec2(0.5)) * 2.0;
           
-          // Inverted gradient - white center fading to transparent
-          float glow = 1.0 - smoothstep(0.0, 0.8, dist);
-          glow = pow(glow, 1.5);
+          // Solid white center that fills the portal
+          float glow = 1.0 - smoothstep(0.0, 1.0, dist);
+          glow = pow(glow, 0.8);
           
           // Subtle pulse
-          glow *= 0.8 + 0.2 * sin(time * 2.0);
+          glow *= 0.9 + 0.1 * sin(time * 2.0);
           
-          // White to green gradient
-          vec3 color = mix(vec3(1.0), vec3(0.4, 0.9, 0.7), dist * 0.5);
+          // Pure white with slight green tint at edges
+          vec3 color = mix(vec3(1.0), vec3(0.8, 1.0, 0.9), dist * 0.3);
           
           gl_FragColor = vec4(color, glow * opacity);
         }
       `
     });
     const centerGlow = new THREE.Mesh(centerGlowGeo, centerGlowMat);
-    centerGlow.position.z = -10;
+    centerGlow.position.z = -5;
     portalGroup.add(centerGlow);
 
     // ============================================
@@ -231,7 +263,7 @@ const MonolithPortal = () => {
     const dustParticles = [];
     const dustGeo = new THREE.PlaneBufferGeometry(80, 80);
     
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 120; i++) {
       const dustMat = new THREE.MeshBasicMaterial({
         map: smokeTexture,
         transparent: true,
@@ -242,7 +274,6 @@ const MonolithPortal = () => {
       
       const dust = new THREE.Mesh(dustGeo, dustMat);
       
-      // Position around the ring
       const angle = Math.random() * Math.PI * 2;
       const radius = 180 + Math.random() * 80;
       const zOffset = (Math.random() - 0.5) * 60;
@@ -270,7 +301,7 @@ const MonolithPortal = () => {
     const sparkParticles = [];
     const sparkGeo = new THREE.PlaneBufferGeometry(8, 8);
     
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 60; i++) {
       const sparkMat = new THREE.MeshBasicMaterial({
         map: sparkTexture,
         transparent: true,
@@ -322,59 +353,94 @@ const MonolithPortal = () => {
     }
 
     // ============================================
-    // MONOLITH PARTICLES (dots that form portal)
+    // MATRIX-STYLE VERTICAL LETTER COLUMNS
     // ============================================
-    const monolithParticles = [];
-    const particleCount = 500;
-    const particleGeo = new THREE.PlaneBufferGeometry(4, 4);
+    const matrixColumns = [];
+    const numColumns = 4;
+    const charsPerColumn = 25;
+    const columnSpacing = 35; // Space between columns
+    const charHeight = 22; // Vertical spacing between chars
+    const columnHeight = charsPerColumn * charHeight;
+    const monolithCenterX = -50; // Monolith is left of center
     
-    for (let i = 0; i < particleCount; i++) {
-      const pMat = new THREE.MeshBasicMaterial({
-        map: sparkTexture,
-        transparent: true,
-        opacity: 0,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
+    // Create column group (positioned on monolith surface)
+    const matrixGroup = new THREE.Group();
+    matrixGroup.position.set(monolithCenterX, 0, 150);
+    scene.add(matrixGroup);
+    
+    // Portal position in world space (for flying destination)
+    const portalWorldPos = new THREE.Vector3(150, -80, 50);
+
+    for (let col = 0; col < numColumns; col++) {
+      const columnChars = [];
+      const colX = (col - (numColumns - 1) / 2) * columnSpacing;
       
-      const particle = new THREE.Mesh(particleGeo, pMat);
+      // Alternate direction: some go up, some go down
+      const direction = col % 2 === 0 ? 1 : -1;
       
-      // Start position: vertical line (monolith dots)
-      const startY = (Math.random() - 0.5) * 600;
-      const startX = (Math.random() - 0.5) * 20;
-      const startZ = 200 + Math.random() * 50;
-      
-      // End position: on the portal ring
-      const endAngle = Math.random() * Math.PI * 2;
-      const endRadius = 180 + Math.random() * 40;
-      const endX = Math.cos(endAngle) * endRadius;
-      const endY = Math.sin(endAngle) * endRadius;
-      const endZ = (Math.random() - 0.5) * 30;
-      
-      particle.position.set(startX, startY, startZ);
-      particle.userData = {
-        startPos: new THREE.Vector3(startX, startY, startZ),
-        endPos: new THREE.Vector3(endX, endY, endZ),
-        delay: Math.random() * 0.5,
-        speed: 0.8 + Math.random() * 0.4
-      };
-      
-      monolithParticles.push(particle);
-      scene.add(particle);
+      for (let i = 0; i < charsPerColumn; i++) {
+        const char = characters[Math.floor(Math.random() * characters.length)];
+        
+        const charMat = new THREE.MeshBasicMaterial({
+          map: charTextures[char],
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        
+        const charGeo = new THREE.PlaneBufferGeometry(18, 18);
+        const charMesh = new THREE.Mesh(charGeo, charMat);
+        
+        // Position in column
+        const startY = (i - charsPerColumn / 2) * charHeight;
+        charMesh.position.set(colX, startY, 0);
+        
+        // End position on portal ring (in portal's local space, then we'll transform)
+        const endAngle = Math.random() * Math.PI * 2;
+        const endRadius = 180 + Math.random() * 40;
+        
+        charMesh.userData = {
+          column: col,
+          index: i,
+          direction: direction,
+          speed: 80 + Math.random() * 40, // Scroll speed
+          baseY: startY,
+          colX: colX,
+          // For soft fade mask
+          normalizedPos: i / charsPerColumn, // 0 to 1
+          // For flying to portal
+          endAngle: endAngle,
+          endRadius: endRadius,
+          endPos: new THREE.Vector3(
+            Math.cos(endAngle) * endRadius,
+            Math.sin(endAngle) * endRadius,
+            (Math.random() - 0.5) * 30
+          ),
+          flyDelay: Math.random() * 0.8,
+          char: char
+        };
+        
+        columnChars.push(charMesh);
+        matrixGroup.add(charMesh);
+      }
+      matrixColumns.push(columnChars);
     }
 
+    // Flatten for easy access
+    const allMatrixChars = matrixColumns.flat();
+
     // ============================================
-    // FLASH PLANE
+    // FLASH PLANE (for tunnel white flash)
     // ============================================
-    const flashGeo = new THREE.PlaneBufferGeometry(2000, 2000);
+    const flashGeo = new THREE.PlaneBufferGeometry(4000, 4000);
     const flashMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending
+      opacity: 0
     });
     const flashPlane = new THREE.Mesh(flashGeo, flashMat);
-    flashPlane.position.z = 300;
+    flashPlane.position.z = 500;
     scene.add(flashPlane);
 
     // ============================================
@@ -386,7 +452,7 @@ const MonolithPortal = () => {
       c.height = 1080;
       const ctx = c.getContext('2d');
       
-      // Background - dark atmospheric
+      // Background
       const grad = ctx.createLinearGradient(0, 0, 0, 1080);
       grad.addColorStop(0, '#0a1f15');
       grad.addColorStop(0.5, '#051210');
@@ -526,18 +592,11 @@ const MonolithPortal = () => {
       ctx.font = '14px Courier New';
       ctx.fillText('━━━━━━━━━━  TRANSMISSION COMPLETE  ━━━━━━━━━━', 960, 1020);
       
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#445';
-      ctx.fillText('Coordinates: Unknown', 200, 1050);
-      ctx.fillText('Status: Stable', 700, 1050);
-      ctx.fillText('Energy: Optimal', 1200, 1050);
-      
       return new THREE.CanvasTexture(c);
     };
 
     const aboutTexture = createAboutTexture();
     
-    // Calculate exact size to fill viewport
     const vFov = cam.fov * Math.PI / 180;
     const targetDistance = 800;
     const planeHeight = 2 * Math.tan(vFov / 2) * targetDistance;
@@ -551,12 +610,17 @@ const MonolithPortal = () => {
     });
     
     const aboutMesh = new THREE.Mesh(aboutGeometry, aboutMaterial);
-    aboutMesh.position.z = -2500;
+    aboutMesh.position.set(portalGroup.position.x, portalGroup.position.y, -2500); // Behind portal
     scene.add(aboutMesh);
 
-    // Final positions
-    const finalAboutZ = 200;
+    const finalAboutZ = portalGroup.position.z + 150;
     const finalCamZ = finalAboutZ + targetDistance;
+
+    // ============================================
+    // ANIMATION STATE
+    // ============================================
+    let matrixScrolling = false;
+    let charsFlying = false;
 
     // ============================================
     // ANIMATION LOOP
@@ -571,6 +635,40 @@ const MonolithPortal = () => {
 
       // Rotate portal group slowly
       portalGroup.rotation.z += delta * 0.15;
+
+      // ============================================
+      // MATRIX SCROLLING ANIMATION (when active)
+      // ============================================
+      if (matrixScrolling && !charsFlying) {
+        allMatrixChars.forEach(char => {
+          const data = char.userData;
+          
+          // Move vertically based on direction
+          char.position.y += data.direction * data.speed * delta;
+          
+          // Wrap around (infinite scroll)
+          const halfHeight = columnHeight / 2;
+          if (data.direction > 0 && char.position.y > halfHeight) {
+            char.position.y = -halfHeight;
+            // Randomize character on wrap
+            const newChar = characters[Math.floor(Math.random() * characters.length)];
+            char.material.map = charTextures[newChar];
+          } else if (data.direction < 0 && char.position.y < -halfHeight) {
+            char.position.y = halfHeight;
+            const newChar = characters[Math.floor(Math.random() * characters.length)];
+            char.material.map = charTextures[newChar];
+          }
+          
+          // Soft fade at edges (top and bottom)
+          const normalizedY = (char.position.y + halfHeight) / columnHeight; // 0 to 1
+          const edgeFade = Math.sin(normalizedY * Math.PI); // 0 at edges, 1 in middle
+          const targetOpacity = Math.pow(edgeFade, 0.5) * 0.9;
+          
+          if (char.material.userData.baseOpacity !== undefined) {
+            char.material.opacity = targetOpacity * char.material.userData.baseOpacity;
+          }
+        });
+      }
 
       // Animate dust particles around ring
       dustParticles.forEach(dust => {
@@ -587,20 +685,12 @@ const MonolithPortal = () => {
         const r = spark.userData.baseRadius + wobble;
         spark.position.x = Math.cos(spark.userData.angle) * r;
         spark.position.y = Math.sin(spark.userData.angle) * r;
-        
-        // Flicker opacity
-        if (spark.material.opacity > 0) {
-          spark.material.opacity = spark.material.opacity * (0.7 + 0.3 * Math.sin(elapsed * spark.userData.flickerSpeed));
-        }
       });
 
       // Animate energy waves
       energyWaves.forEach((wave, i) => {
         const pulse = Math.sin(elapsed * 2 + wave.userData.phase);
         wave.scale.setScalar(1 + pulse * 0.1);
-        if (wave.material.opacity > 0) {
-          wave.material.opacity = wave.material.opacity * (0.3 + 0.7 * Math.abs(pulse));
-        }
       });
 
       // Update center glow shader
@@ -608,7 +698,8 @@ const MonolithPortal = () => {
 
       // Flicker portal light
       if (portalLight.intensity > 0) {
-        portalLight.intensity = portalLight.intensity * (0.8 + 0.2 * Math.sin(elapsed * 5));
+        const base = portalLight.userData?.baseIntensity || portalLight.intensity;
+        portalLight.intensity = base * (0.85 + 0.15 * Math.sin(elapsed * 5));
       }
 
       renderer.render(scene, cam);
@@ -624,7 +715,7 @@ const MonolithPortal = () => {
       scrollTrigger: {
         trigger: containerRef.current,
         start: 'top top',
-        end: '+=600%',
+        end: '+=800%',
         scrub: 2,
         pin: true,
         anticipatePin: 1,
@@ -633,92 +724,125 @@ const MonolithPortal = () => {
     });
 
     tl
-      // ========== PHASE 1: Parallax (0-10%) ==========
+      // ========== PHASE 1: Initial parallax (0-8%) ==========
       .to(bgImageRef.current, {
-        scale: 1.15,
+        scale: 1.1,
         duration: 1,
         ease: 'none'
       })
       
-      // ========== PHASE 2: Zoom to monolith base (10-30%) ==========
+      // ========== PHASE 2: ZOOM TO MAN - Shows monolith + man + space above (8-22%) ==========
+      // ZOOM CONTROL: scale 2.2 focuses on man at bottom-right while keeping monolith visible
       .to(bgImageRef.current, {
-        scale: 4,
-        y: '-45%',
-        duration: 2.5,
+        scale: 2.2, // ZOOM LEVEL - adjust this to change zoom amount
+        y: '-25%',  // Shifts view down to show base area
+        x: '-8%',    // Shifts right to center on man
+        duration: 2,
         ease: 'power2.inOut'
       }, '+=0.1')
       
       .to(textBottomLeftRef.current, {
         x: '45vw',
         y: '-20vh',
-        duration: 2.5,
+        duration: 2,
         ease: 'power2.inOut'
       }, '<')
       
       .to(textBottomCenterRef.current, {
         x: '-35vw',
         y: '5vh',
-        duration: 2.5,
+        duration: 2,
         ease: 'power2.inOut'
       }, '<')
       
       .to([line1Ref.current, line2Ref.current], {
         scaleX: 0,
         opacity: 0,
-        duration: 1.5,
+        duration: 1.2,
         ease: 'power2.inOut'
       }, '<0.3')
       
-      // ========== PHASE 3: Extreme zoom + Monolith particles emerge (30-45%) ==========
-      .to(bgImageRef.current, {
-        scale: 12,
-        y: '-55%',
-        duration: 2.5,
-        ease: 'power2.inOut'
-      }, '+=0.1')
-      
+      // ========== PHASE 3: Hold zoom, matrix letters fade in (22-35%) ==========
       .to([textBottomLeftRef.current, textBottomCenterRef.current], {
         opacity: 0,
-        duration: 1,
+        duration: 0.8,
         ease: 'power2.out'
-      }, '<')
+      })
       
-      // Monolith particles appear
-      .to(monolithParticles.map(p => p.material), {
-        opacity: 0.8,
-        duration: 1,
-        stagger: 0.002,
-        ease: 'power2.out'
-      }, '<0.5')
+      // Start matrix scrolling
+      .call(() => { matrixScrolling = true; })
       
+      // Fade in matrix characters
+      .to(allMatrixChars.map(c => c.material), {
+        opacity: 0.9,
+        duration: 2,
+        stagger: 0.01,
+        ease: 'power2.out',
+        onStart: () => {
+          allMatrixChars.forEach(c => {
+            c.material.userData = { baseOpacity: 1 };
+          });
+        }
+      })
+      
+      // Camera moves closer slightly
       .to(cam.position, {
-        z: 600,
+        z: 800,
         duration: 2,
         ease: 'power2.inOut'
       }, '<')
       
-      // ========== PHASE 4: Particles fly to form ring (45-55%) ==========
-      .to(monolithParticles.map(p => p.position), {
-        x: (i) => monolithParticles[i].userData.endPos.x,
-        y: (i) => monolithParticles[i].userData.endPos.y,
-        z: (i) => monolithParticles[i].userData.endPos.z,
-        duration: 2,
-        stagger: 0.003,
+      // ========== PHASE 4: Matrix scrolls, hold (35-45%) ==========
+      .to(bgImageRef.current, {
+        scale: 2.4,
+        duration: 1.5,
         ease: 'power2.inOut'
       })
       
-      // Flash during formation
-      .to(flashMat, {
-        opacity: 0.3,
-        duration: 0.3,
-        ease: 'power2.in'
-      }, '-=1')
+      .to(cam.position, {
+        z: 650,
+        duration: 1.5,
+        ease: 'power2.inOut'
+      }, '<')
       
-      .to(flashMat, {
-        opacity: 0,
-        duration: 0.5,
+      // ========== PHASE 5: Letters fly to portal position (45-58%) ==========
+      .call(() => { charsFlying = true; })
+      
+      // Letters fly from monolith to portal position (right side where man is)
+      .to(allMatrixChars.map(c => c.position), {
+        x: (i) => {
+          const char = allMatrixChars[i];
+          // Convert portal local position to matrix group local position
+          const worldEnd = char.userData.endPos.clone();
+          // Account for portal group offset from matrix group
+          const offsetX = portalGroup.position.x - matrixGroup.position.x;
+          const offsetY = portalGroup.position.y - matrixGroup.position.y;
+          return worldEnd.x + offsetX;
+        },
+        y: (i) => {
+          const char = allMatrixChars[i];
+          const worldEnd = char.userData.endPos.clone();
+          const offsetY = portalGroup.position.y - matrixGroup.position.y;
+          return worldEnd.y + offsetY;
+        },
+        z: (i) => {
+          const char = allMatrixChars[i];
+          return char.userData.endPos.z + (portalGroup.position.z - matrixGroup.position.z);
+        },
+        duration: 3,
+        stagger: {
+          each: 0.015,
+          from: "random"
+        },
+        ease: 'power3.inOut'
+      })
+      
+      // Background fades as letters fly
+      .to(bgImageRef.current, {
+        opacity: 0.5,
+        duration: 2,
         ease: 'power2.out'
-      }, '-=0.5')
+      }, '<1')
       
       // Portal ring appears
       .to(ringMaterial, {
@@ -734,34 +858,36 @@ const MonolithPortal = () => {
       }, '<')
       
       .to(portalLight, {
-        intensity: 30,
+        intensity: 25,
         duration: 1.5,
-        ease: 'power2.out'
+        ease: 'power2.out',
+        onUpdate: function() {
+          portalLight.userData = { baseIntensity: portalLight.intensity };
+        }
       }, '<')
       
-      // ========== PHASE 5: Portal fully formed (55-65%) ==========
-      // Dust and sparks appear
+      // ========== PHASE 6: Portal fully formed (58-68%) ==========
       .to(dustParticles.map(p => p.material), {
-        opacity: 0.6,
+        opacity: 0.5,
         duration: 1.5,
-        stagger: 0.01,
+        stagger: 0.008,
         ease: 'power2.out'
       }, '-=1')
       
       .to(sparkParticles.map(p => p.material), {
-        opacity: 1,
+        opacity: 0.8,
         duration: 1,
-        stagger: 0.01,
+        stagger: 0.008,
         ease: 'power2.out'
       }, '<0.3')
       
       .to(energyWaves.map(w => w.material), {
-        opacity: 0.4,
+        opacity: 0.3,
         duration: 1,
         ease: 'power2.out'
       }, '<')
       
-      // Center glow
+      // Center glow (white light filling portal)
       .to(centerGlowMat.uniforms.opacity, {
         value: 1,
         duration: 1.5,
@@ -769,125 +895,123 @@ const MonolithPortal = () => {
       }, '<')
       
       .to(centerLight, {
-        intensity: 15,
+        intensity: 12,
         duration: 1.5,
         ease: 'power2.out'
       }, '<')
       
-      .to(bgImageRef.current, {
-        opacity: 0,
-        duration: 1.5,
-        ease: 'power2.out'
-      }, '<')
-      
-      // Fade monolith particles into ring
-      .to(monolithParticles.map(p => p.material), {
+      // Fade matrix chars into ring
+      .to(allMatrixChars.map(c => c.material), {
         opacity: 0,
         duration: 1,
         ease: 'power2.out'
-      }, '<0.5')
+      }, '-=0.5')
       
-      // ========== PHASE 6: Enter portal (65-80%) ==========
+      // ========== PHASE 7: Camera moves toward portal (68-78%) ==========
+      // Move camera toward portal position
       .to(cam.position, {
-        z: 200,
+        x: portalGroup.position.x * 0.3,
+        y: portalGroup.position.y * 0.3,
+        z: 400,
         duration: 2.5,
         ease: 'power2.inOut'
       })
       
-      // Second flash as we enter
-      .to(flashMat, {
-        opacity: 0.5,
-        duration: 0.4,
-        ease: 'power2.in'
-      }, '-=1')
-      
-      .to(flashMat, {
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.out'
-      })
-      
-      // About appears behind
-      .to(aboutMaterial, {
-        opacity: 0.5,
+      // ========== PHASE 8: Enter portal - zoom into white light (78-88%) ==========
+      .to(cam.position, {
+        x: portalGroup.position.x * 0.8,
+        y: portalGroup.position.y * 0.8,
+        z: portalGroup.position.z + 100,
         duration: 2,
-        ease: 'power2.out'
-      }, '<-1.5')
+        ease: 'power2.in'
+      })
       
-      .to(aboutMesh.position, {
-        z: -500,
-        duration: 2.5,
-        ease: 'power2.inOut'
+      // White overlay builds
+      .to(whiteOverlayRef.current, {
+        opacity: 1,
+        duration: 2,
+        ease: 'power2.in'
       }, '<')
       
-      // ========== PHASE 7: Through portal, portal fades (80-90%) ==========
-      .to(cam.position, {
-        z: 500,
-        duration: 2.5,
-        ease: 'power2.inOut'
-      })
-      
-      // Portal fades
+      // Portal fades behind white
       .to([ringMaterial, glowRingMat], {
         opacity: 0,
-        duration: 2,
+        duration: 1.5,
         ease: 'power2.out'
-      }, '<0.3')
+      }, '<0.5')
       
       .to(dustParticles.map(p => p.material), {
         opacity: 0,
-        duration: 1.5,
+        duration: 1,
         ease: 'power2.out'
       }, '<')
       
       .to(sparkParticles.map(p => p.material), {
         opacity: 0,
-        duration: 1.5,
+        duration: 1,
         ease: 'power2.out'
       }, '<')
       
       .to(energyWaves.map(w => w.material), {
         opacity: 0,
-        duration: 1.5,
+        duration: 1,
         ease: 'power2.out'
       }, '<')
       
       .to(centerGlowMat.uniforms.opacity, {
         value: 0,
-        duration: 1.5,
+        duration: 1,
         ease: 'power2.out'
       }, '<')
       
       .to([portalLight, centerLight], {
         intensity: 0,
-        duration: 1.5,
+        duration: 1,
         ease: 'power2.out'
       }, '<')
       
-      .to(aboutMesh.position, {
-        z: 100,
-        duration: 2.5,
-        ease: 'power2.inOut'
-      }, '<')
+      // ========== PHASE 9: Eyes adjust - white fades to reveal about (88-95%) ==========
+      // About section appears behind white
+      .set(aboutMaterial, { opacity: 1 })
+      .set(aboutMesh.position, { z: -600 })
       
-      .to(aboutMaterial, {
-        opacity: 1,
-        duration: 2,
-        ease: 'power2.out'
-      }, '<')
-      
-      // ========== PHASE 8: About locks at 100vh (90-100%) ==========
-      .to(cam.position, {
-        z: finalCamZ,
-        duration: 2,
-        ease: 'power1.out'
+      // White fades down slowly (eyes adjusting)
+      .to(whiteOverlayRef.current, {
+        opacity: 0,
+        duration: 3,
+        ease: 'power3.out'
       })
       
-      .to(aboutMesh.position, {
-        z: finalAboutZ,
-        duration: 2,
-        ease: 'power1.out'
-      }, '<');
+      // // Camera positions for about section
+      // .to(cam.position, {
+      //   x: portalGroup.position.x,
+      //   y: portalGroup.position.y,
+      //   z:100,
+      //   duration: 3,
+      //   ease: 'power2.out'
+      // }, '<')
+      
+      // About section comes forward
+      // .to(aboutMesh.position, {
+      //   z: -500,
+      //   duration: 3,
+      //   ease: 'power2.out'
+      // }, '<')
+      
+      // ========== PHASE 10: About fills viewport (95-100%) ==========
+      // .to(cam.position, {
+      //   x: aboutMesh.position.x,
+      //   y: aboutMesh.position.y,
+      //   z: finalCamZ,
+      //   duration: 2,
+      //   ease: 'power1.out'
+      // })
+      
+      // .to(aboutMesh.position, {
+      //   z: finalAboutZ,
+      //   duration: 2,
+      //   ease: 'power1.out'
+      // }, '<');
 
     // ============================================
     // RESIZE
@@ -897,7 +1021,6 @@ const MonolithPortal = () => {
       cam.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       
-      // Recalculate about plane size
       const newHeight = 2 * Math.tan(vFov / 2) * targetDistance;
       const newWidth = newHeight * (window.innerWidth / window.innerHeight);
       aboutMesh.geometry.dispose();
@@ -937,7 +1060,7 @@ const MonolithPortal = () => {
           left: 0,
           width: '100%',
           height: '100%',
-          transformOrigin: 'center 70%',
+          transformOrigin: 'center 80%', // Focus point: bottom area where man stands
           willChange: 'transform, opacity'
         }}
       >
@@ -1037,6 +1160,22 @@ const MonolithPortal = () => {
         }}
       />
 
+      {/* White Overlay for Tunnel Exit Effect */}
+      <div
+        ref={whiteOverlayRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: '#ffffff',
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: 25
+        }}
+      />
+
       {/* Vignette */}
       <div 
         style={{
@@ -1048,7 +1187,7 @@ const MonolithPortal = () => {
           background: 'radial-gradient(ellipse at center 65%, transparent 20%, rgba(5, 15, 10, 0.8) 100%)',
           pointerEvents: 'none',
           zIndex: 15,
-          opacity: scrollProgress < 0.85 ? 1 : 0,
+          opacity: scrollProgress < 0.7 ? 1 : 0,
           transition: 'opacity 1s ease-out'
         }} 
       />
