@@ -1,0 +1,346 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  background: #000;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+#bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 60%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+#webgl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#scroll-indicator {
+  position: absolute;
+  bottom: 3%;
+  right: 4%;
+  color: #00ff88;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.8);
+  z-index: 30;
+  animation: pulseIndicator 2s ease-in-out infinite;
+  letter-spacing: 2px;
+  transition: opacity 0.3s ease;
+}
+
+#progress-bar {
+  position: fixed;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 60px;
+  background: rgba(0, 255, 136, 0.15);
+  border-radius: 1px;
+  z-index: 100;
+}
+
+#progress-fill {
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to bottom, #00cc66, #00ff88);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.8);
+  transition: height 0.15s ease-out;
+}
+
+/* ============================================
+   ABOUT SECTION
+   ============================================ */
+
+#about-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #001a0f 0%, #000814 50%, #000 100%);
+  padding: 60px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  opacity: 0;
+  z-index: 50;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#about-section[style*="opacity: 1"],
+#about-section.visible {
+  pointer-events: auto;
+}
+
+.about-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+}
+
+.about-content {
+  max-width: 900px;
+  margin: 0 auto;
+  line-height: 1.8;
+  font-size: clamp(14px, 1.5vw, 18px);
+  position: relative;
+  z-index: 1;
+}
+
+.about-title {
+  font-size: clamp(32px, 4vw, 56px);
+  margin-bottom: 20px;
+  color: #00ff88;
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+  letter-spacing: 3px;
+  font-weight: bold;
+  animation: fadeInUp 1s ease-out;
+}
+
+.about-subtitle {
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: #00ff88;
+  margin-bottom: 40px;
+  opacity: 0.7;
+  letter-spacing: 2px;
+  animation: fadeInUp 1s ease-out 0.2s backwards;
+}
+
+.about-text {
+  animation: fadeInUp 1s ease-out 0.4s backwards;
+}
+
+.about-text p {
+  margin-bottom: 24px;
+  color: #ccc;
+}
+
+.about-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+  animation: fadeInUp 1s ease-out 0.6s backwards;
+}
+
+.feature-box {
+  padding: 25px;
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.feature-box:hover {
+  background: rgba(0, 255, 136, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+}
+
+.feature-box h3 {
+  font-size: clamp(18px, 2vw, 24px);
+  margin-bottom: 15px;
+  color: #00ff88;
+}
+
+.feature-box p {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.welcome-box {
+  margin-top: 60px;
+  padding: 30px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+  border: 2px solid rgba(0, 255, 136, 0.4);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 1s ease-out 0.8s backwards;
+}
+
+.corner-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle at top right, rgba(0, 255, 136, 0.2), transparent);
+  pointer-events: none;
+}
+
+.welcome-box h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  margin-bottom: 20px;
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.welcome-box > p {
+  color: #bbb;
+  line-height: 1.8;
+}
+
+.tech-lines {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tech-line-left {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(to right, #00ff88, transparent);
+}
+
+.tech-line-right {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, #00ff88, transparent);
+}
+
+.tech-lines span {
+  color: #00ff88;
+  font-size: 12px;
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+
+.about-footer {
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(0, 255, 136, 0.2);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 14px;
+  color: #666;
+  animation: fadeInUp 1s ease-out 1s backwards;
+}
+
+.footer-label {
+  color: #00ff88;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes pulseIndicator {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gridMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(50px);
+  }
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a1a10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a8a5a;
+  border-radius: 2px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  #about-section {
+    padding: 40px 15px;
+  }
+
+  .about-features {
+    grid-template-columns: 1fr;
+  }
+
+  .about-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
