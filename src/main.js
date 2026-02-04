@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
 import { createMonolith, createSlitGlow, createEnvironment } from './monolith.js';
 import {
@@ -28,14 +30,11 @@ import {
   PORTAL_CONFIG,
   MATRIX_CONFIG,
 } from './portal.js';
+import AboutPage from './about.jsx';
 
 import '../style.css';
 
 gsap.registerPlugin(ScrollTrigger);
-
-// ============================================
-// DOM ELEMENTS
-// ============================================
 
 const container = document.getElementById('app');
 const canvas = document.getElementById('webgl');
@@ -43,6 +42,13 @@ const bgImage = document.getElementById('bg-image');
 const scrollIndicator = document.getElementById('scroll-indicator');
 const progressBar = document.getElementById('progress-fill');
 const aboutSection = document.getElementById('about-section');
+
+// ============================================
+// MOUNT REACT ABOUT COMPONENT
+// ============================================
+
+const aboutRoot = createRoot(aboutSection);
+aboutRoot.render(React.createElement(AboutPage));
 
 // ============================================
 // THREE.JS SETUP
@@ -133,6 +139,7 @@ portalGroup.position.set(
   PORTAL_CONFIG.position.y,
   PORTAL_CONFIG.position.z
 );
+portalGroup.scale.set(0, 0, 0);
 scene.add(portalGroup);
 
 const portalEffects = createPortalEffects(portalGroup, textures);
@@ -147,12 +154,9 @@ const tunnelParticles = createTunnelParticles(scene, textures);
 // ANIMATION STATE
 // ============================================
 
-let matrixScrolling = false;
-let charsFlying = false;
 let portalActive = false;
 let tunnelRush = false;
-let cameraFrozen = false;
-let frozenCameraZ = 15;
+let matrixScrolling = false;
 
 const clock = new THREE.Clock();
 
@@ -181,14 +185,11 @@ function animate() {
   const elapsed = clock.getElapsedTime();
 
   // Matrix scrolling animation
-  if (matrixScrolling && !charsFlying) {
+  if (matrixScrolling) {
     animateMatrixScroll(matrixChars, charTextures, delta);
   }
 
-  // Portal animation
   animatePortalEffects(portalEffects, elapsed, delta, portalActive);
-
-  // Tunnel animation
   animateTunnelParticles(tunnelParticles, delta, tunnelRush);
 
   renderer.render(scene, camera);
@@ -197,7 +198,7 @@ function animate() {
 animate();
 
 // ============================================
-// SCROLL TIMELINE
+// SCROLL TIMELINE - FULLY REVERSIBLE
 // ============================================
 
 const tl = gsap.timeline({
@@ -209,516 +210,181 @@ const tl = gsap.timeline({
     pin: true,
     anticipatePin: 1,
     onUpdate: (self) => {
-      // Update progress bar
       progressBar.style.height = `${self.progress * 100}%`;
-      
-      // Hide scroll indicator
       scrollIndicator.style.opacity = self.progress < 0.02 ? 1 : 0;
+      
+      // State management based on progress
+      matrixScrolling = self.progress > 0.12 && self.progress < 0.35;
+      portalActive = self.progress > 0.45 && self.progress < 0.88;
+      tunnelRush = self.progress > 0.72 && self.progress < 0.88;
     },
   },
 });
 
-// ============================================
-// PHASE 1: Initial approach (0% - 10%)
-// ============================================
+// PHASE 1: Initial approach
+tl.to(camera.position, { z: 15, duration: 1.5, ease: 'none' });
 
-tl.to(camera.position, {
-  z: 15,
-  duration: 1.5,
-  ease: 'power1.inOut',
-});
+// PHASE 2: Slit glows, matrix appears
+tl.to(slitGlow.material, { opacity: 0.7, duration: 0.8, ease: 'none' });
 
-// ============================================
-// PHASE 2: Slit glows, matrix appears (10% - 25%)
-// ============================================
-
-tl.to(slitGlow.material, {
-  opacity: 0.7,
-  duration: 0.8,
-  ease: 'power2.out',
-});
-
-tl.call(() => {
-  matrixScrolling = true;
-  cameraFrozen = true;
-  frozenCameraZ = camera.position.z;
-});
-
-// Matrix chars fade in
 tl.to(
   matrixChars.map((c) => c.material),
-  {
-    opacity: 0.9,
-    duration: 1.5,
-    stagger: { each: 0.01, from: 'random' },
-    ease: 'power1.out',
-    onStart: () => {
-      matrixChars.forEach((c) => {
-        c.material.userData = { baseOpacity: 1 };
-        c.visible = true;
-      });
-    },
-  }
+  { opacity: 0.9, duration: 1.5, stagger: { each: 0.008, from: 'random' }, ease: 'none' }
 );
 
-// ============================================
-// PHASE 3: Matrix scrolls, slight bg dim (25% - 35%)
-// ============================================
+// PHASE 3: Background dims
+tl.to(bgImage, { opacity: 0.75, duration: 1.5, ease: 'none' });
+tl.to({}, { duration: 0.8 });
 
-tl.to(bgImage, {
-  opacity: 0.75,
-  duration: 1.5,
-  ease: 'power2.out',
-});
-
-// Hold for matrix scroll effect
-tl.to({}, { duration: 1 });
-
-// ============================================
-// PHASE 4: Letters float outward from slit (35% - 45%)
-// ============================================
-
-tl.call(() => {
-  charsFlying = true;
-  matrixChars.forEach((c) => {
-    c.userData.flyPhase = 1;
-  });
-});
-
-// Float outward (toward camera)
+// PHASE 4: Letters float outward
 tl.to(
   matrixChars.map((c) => c.position),
   {
     x: (i) => matrixChars[i].userData.floatPos.x,
     y: (i) => matrixChars[i].userData.floatPos.y,
     z: (i) => matrixChars[i].userData.floatPos.z,
-    duration: 1.2,
-    stagger: { each: 0.008, from: 'center' },
-    ease: 'power2.out',
+    duration: 1,
+    stagger: { each: 0.006, from: 'center' },
+    ease: 'none',
   }
 );
 
-// ============================================
-// PHASE 5: Letters fly to portal position (45% - 55%)
-// ============================================
-
-tl.call(() => {
-  matrixChars.forEach((c) => {
-    c.userData.flyPhase = 2;
-  });
-});
-
-// Calculate target positions relative to portal
+// PHASE 5: Letters fly to portal
 tl.to(
   matrixChars.map((c) => c.position),
   {
-    x: (i) => {
-      const char = matrixChars[i];
-      return portalGroup.position.x + char.userData.endPos.x - matrixGroup.position.x;
-    },
-    y: (i) => {
-      const char = matrixChars[i];
-      return portalGroup.position.y + char.userData.endPos.y - matrixGroup.position.y;
-    },
-    z: (i) => {
-      const char = matrixChars[i];
-      return portalGroup.position.z + char.userData.endPos.z - matrixGroup.position.z;
-    },
-    duration: 1.8,
-    stagger: { each: 0.006, from: 'edges' },
-    ease: 'power2.inOut',
+    x: (i) => portalGroup.position.x + matrixChars[i].userData.endPos.x - matrixGroup.position.x,
+    y: (i) => portalGroup.position.y + matrixChars[i].userData.endPos.y - matrixGroup.position.y,
+    z: (i) => portalGroup.position.z + matrixChars[i].userData.endPos.z - matrixGroup.position.z,
+    duration: 1.5,
+    stagger: { each: 0.005, from: 'edges' },
+    ease: 'none',
   }
 );
 
-// Dim background more as portal forms
+tl.to(bgImage, { opacity: 0.3, duration: 1.2, ease: 'none' }, '<0.3');
+
+// PHASE 6: Portal forms
+tl.to(portalGroup.scale, { x: 1, y: 1, z: 1, duration: 0.8, ease: 'none' });
+
+tl.to(portalEffects.vortex.material, { opacity: 0.8, duration: 0.8, ease: 'none' }, '<');
+
 tl.to(
-  bgImage,
-  {
-    opacity: 0.4,
-    duration: 1.5,
-    ease: 'power2.out',
-  },
-  '<0.3'
+  portalEffects.darkClouds.map((c) => c.material),
+  { opacity: 0.7, duration: 0.8, stagger: 0.004, ease: 'none' },
+  '<0.1'
 );
 
-// ============================================
-// PHASE 6: Portal forms (55% - 65%)
-// ============================================
-
-tl.call(() => {
-  portalActive = true;
-  portalGroup.visible = true;
-});
-
-// Vortex
-tl.to(portalEffects.vortex.material, {
-  opacity: 0.8,
-  duration: 1,
-  ease: 'power2.out',
-});
-
-// Energy rings
 tl.to(
-  portalEffects.energyRings.map((r) => r.material),
-  {
-    opacity: 0.6,
-    duration: 1,
-    stagger: 0.1,
-    ease: 'power2.out',
-  },
+  portalEffects.portalParticles.map((p) => p.material),
+  { opacity: 0.5, duration: 0.6, stagger: 0.003, ease: 'none' },
+  '<0.1'
+);
+
+tl.to(
+  portalEffects.sparks.map((s) => s.material),
+  { opacity: 0.9, duration: 0.5, stagger: 0.004, ease: 'none' },
+  '<0.1'
+);
+
+tl.to(
+  portalEffects.sparkTrails.map((t) => t.material),
+  { opacity: 0.7, duration: 0.5, stagger: 0.006, ease: 'none' },
+  '<'
+);
+
+tl.to(
+  portalEffects.portalTextParticles.map((p) => p.material),
+  { opacity: 0.6, duration: 0.6, stagger: 0.002, ease: 'none' },
+  '<0.1'
+);
+
+tl.to(
+  portalEffects.lightRays.map((r) => r.material),
+  { opacity: 0.5, duration: 0.8, stagger: 0.015, ease: 'none' },
+  '<'
+);
+
+tl.to(
+  portalEffects.centerParticles.map((p) => p.material),
+  { opacity: 0.4, duration: 0.8, stagger: 0.01, ease: 'none' },
+  '<'
+);
+
+// Fade matrix chars
+tl.to(
+  matrixChars.map((c) => c.material),
+  { opacity: 0, duration: 0.6, ease: 'none' },
   '<0.2'
 );
 
-// Dark clouds
-tl.to(
-  portalEffects.darkClouds.map((c) => c.material),
-  {
-    opacity: 0.7,
-    duration: 1,
-    stagger: 0.006,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.darkClouds.forEach((c) => {
-        c.material.userData = { baseOpacity: 0.7 };
-      });
-    },
-  },
-  '<0.1'
-);
-
-// Dust particles
-tl.to(
-  portalEffects.portalParticles.map((p) => p.material),
-  {
-    opacity: 0.5,
-    duration: 0.8,
-    stagger: 0.004,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.portalParticles.forEach((p) => {
-        p.material.userData = { baseOpacity: 0.5 };
-      });
-    },
-  },
-  '<0.1'
-);
-
-// Sparks
-tl.to(
-  portalEffects.sparks.map((s) => s.material),
-  {
-    opacity: 0.9,
-    duration: 0.6,
-    stagger: 0.006,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.sparks.forEach((s) => {
-        s.material.userData = { baseOpacity: 0.9 };
-      });
-    },
-  },
-  '<0.1'
-);
-
-// Spark trails
-tl.to(
-  portalEffects.sparkTrails.map((t) => t.material),
-  {
-    opacity: 0.7,
-    duration: 0.6,
-    stagger: 0.008,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.sparkTrails.forEach((t) => {
-        t.material.userData = { baseOpacity: 0.7 };
-      });
-    },
-  },
-  '<'
-);
-
-// Text particles
-tl.to(
-  portalEffects.portalTextParticles.map((p) => p.material),
-  {
-    opacity: 0.6,
-    duration: 0.8,
-    stagger: 0.003,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.portalTextParticles.forEach((p) => {
-        p.material.userData = { baseOpacity: 0.6 };
-      });
-    },
-  },
-  '<0.1'
-);
-
-// Light rays
-tl.to(
-  portalEffects.lightRays.map((r) => r.material),
-  {
-    opacity: 0.5,
-    duration: 1,
-    stagger: 0.02,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.lightRays.forEach((r) => {
-        r.material.userData = { baseOpacity: 0.5 };
-      });
-    },
-  },
-  '<'
-);
-
-// Center particles
-tl.to(
-  portalEffects.centerParticles.map((p) => p.material),
-  {
-    opacity: 0.4,
-    duration: 1,
-    stagger: 0.015,
-    ease: 'power2.out',
-    onStart: () => {
-      portalEffects.centerParticles.forEach((p) => {
-        p.material.userData = { baseOpacity: 0.4 };
-      });
-    },
-  },
-  '<'
-);
-
-// Fade out matrix chars as they merge into portal
-tl.to(
-  matrixChars.map((c) => c.material),
-  {
-    opacity: 0,
-    duration: 0.8,
-    ease: 'power2.out',
-  },
-  '<0.3'
-);
-
-// ============================================
-// PHASE 7: Camera approaches portal (65% - 75%)
-// ============================================
-
-tl.call(() => {
-  cameraFrozen = false;
-});
-
+// PHASE 7: Camera approaches portal
 tl.to(camera.position, {
   x: portalGroup.position.x * 0.6,
   y: portalGroup.position.y * 0.5,
   z: 8,
-  duration: 2,
-  ease: 'power1.inOut',
+  duration: 1.8,
+  ease: 'none',
 });
 
-// Monolith fades
-tl.to(
-  [monolith.material, slitGlow.material],
-  {
-    opacity: 0,
-    duration: 1.5,
-    ease: 'power2.out',
-  },
-  '<0.5'
-);
+tl.to([monolith.material, slitGlow.material], { opacity: 0, duration: 1.2, ease: 'none' }, '<0.4');
+tl.to(bgImage, { opacity: 0, duration: 1.2, ease: 'none' }, '<');
 
-// Background fades completely
-tl.to(
-  bgImage,
-  {
-    opacity: 0,
-    duration: 1.5,
-    ease: 'power2.out',
-  },
-  '<'
-);
-
-// Intensify portal
 tl.to(
   portalEffects.sparks.map((s) => s.material),
-  {
-    opacity: 1,
-    duration: 1.5,
-    ease: 'power1.in',
-  },
+  { opacity: 1, duration: 1, ease: 'none' },
   '<'
 );
 
-// ============================================
-// PHASE 8: Enter portal - tunnel rush (75% - 85%)
-// ============================================
+tl.to(portalEffects.vortex.material, { opacity: 1, duration: 1, ease: 'none' }, '<');
 
-tl.call(() => {
-  tunnelRush = true;
-  tunnelParticles.forEach((p) => (p.visible = true));
-});
-
+// PHASE 8: Tunnel rush
 tl.to(
   tunnelParticles.map((p) => p.material),
-  {
-    opacity: 0.7,
-    duration: 0.4,
-    ease: 'power2.out',
-    onStart: () => {
-      tunnelParticles.forEach((p) => {
-        p.material.userData = { baseOpacity: 0.7 };
-      });
-    },
-  }
+  { opacity: 0.7, duration: 0.4, ease: 'none' }
 );
 
 tl.to(camera.position, {
   x: portalGroup.position.x,
   y: portalGroup.position.y,
   z: portalGroup.position.z + 1,
-  duration: 1.5,
-  ease: 'power2.in',
+  duration: 1.2,
+  ease: 'none',
 });
 
+tl.to(portalGroup.position, { z: 15, duration: 1.2, ease: 'none' }, '<');
+
+// PHASE 9: Effects fade out
+tl.to(portalGroup.scale, { x: 0, y: 0, z: 0, duration: 0.8, ease: 'none' });
+
+tl.to(portalEffects.vortex.material, { opacity: 0, duration: 0.8, ease: 'none' }, '<');
+
 tl.to(
-  portalGroup.position,
-  {
-    z: 15,
-    duration: 1.5,
-    ease: 'power2.in',
-  },
+  [
+    ...portalEffects.darkClouds.map((c) => c.material),
+    ...portalEffects.portalParticles.map((p) => p.material),
+    ...portalEffects.sparks.map((s) => s.material),
+    ...portalEffects.sparkTrails.map((t) => t.material),
+    ...portalEffects.portalTextParticles.map((p) => p.material),
+    ...portalEffects.lightRays.map((r) => r.material),
+    ...portalEffects.centerParticles.map((p) => p.material),
+  ],
+  { opacity: 0, duration: 0.8, ease: 'none' },
   '<'
 );
 
-// ============================================
-// PHASE 9: Through portal - fade out effects (85% - 92%)
-// ============================================
+tl.to(
+  tunnelParticles.map((p) => p.material),
+  { opacity: 0, duration: 0.8, ease: 'none' },
+  '<0.2'
+);
 
-tl.call(() => {
-  tunnelRush = false;
-});
+// PHASE 10: About section
+tl.to(aboutSection, { opacity: 1, duration: 1.2, ease: 'none' });
+tl.to(camera.position, { x: 0, y: 0, z: 10, duration: 1.2, ease: 'none' }, '<');
 
-// Fade out all portal effects
-const allPortalMaterials = [
-  portalEffects.vortex.material,
-  ...portalEffects.energyRings.map((r) => r.material),
-  ...portalEffects.darkClouds.map((c) => c.material),
-  ...portalEffects.portalParticles.map((p) => p.material),
-  ...portalEffects.sparks.map((s) => s.material),
-  ...portalEffects.sparkTrails.map((t) => t.material),
-  ...portalEffects.portalTextParticles.map((p) => p.material),
-  ...portalEffects.lightRays.map((r) => r.material),
-  ...portalEffects.centerParticles.map((p) => p.material),
-  ...tunnelParticles.map((p) => p.material),
-];
-
-tl.to(allPortalMaterials, {
-  opacity: 0,
-  duration: 1,
-  ease: 'power2.out',
-});
-
-// ============================================
-// PHASE 10: About section appears (92% - 100%)
-// ============================================
-
-tl.call(() => {
-  portalActive = false;
-  // Hide 3D elements
-  portalGroup.visible = false;
-  tunnelParticles.forEach((p) => (p.visible = false));
-  matrixChars.forEach((c) => (c.visible = false));
-  monolith.visible = false;
-  slitGlow.visible = false;
-});
-
-tl.to(aboutSection, {
-  opacity: 1,
-  duration: 1.5,
-  ease: 'power2.out',
-});
-
-tl.to(camera.position, {
-  x: 0,
-  y: 0,
-  z: 10,
-  duration: 1.5,
-  ease: 'power2.out',
-}, '<');
-
-// ============================================
-// BIDIRECTIONAL SCROLL HANDLING
-// ============================================
-
-let lastProgress = 0;
-
-ScrollTrigger.create({
-  trigger: container,
-  start: 'top top',
-  end: '+=900%',
-  onUpdate: (self) => {
-    const progress = self.progress;
-    const direction = progress > lastProgress ? 1 : -1;
-    lastProgress = progress;
-
-    if (direction === -1) {
-      // Scrolling backward
-
-      // If we go back before about section
-      if (progress < 0.92) {
-        aboutSection.style.opacity = 0;
-        portalGroup.visible = true;
-        monolith.visible = true;
-        slitGlow.visible = true;
-        portalActive = true;
-      }
-
-      // If we go back before tunnel
-      if (progress < 0.75) {
-        tunnelParticles.forEach((p) => (p.visible = true));
-        tunnelRush = true;
-      }
-
-      // If we go back before portal fade intensify
-      if (progress < 0.65) {
-        tunnelRush = false;
-      }
-
-      // If we go back before portal formation
-      if (progress < 0.55) {
-        matrixChars.forEach((c) => (c.visible = true));
-      }
-
-      // If we go back before letters fly to portal
-      if (progress < 0.45) {
-        charsFlying = true;
-      }
-
-      // If we go back before letters float out
-      if (progress < 0.35) {
-        charsFlying = false;
-        matrixScrolling = true;
-      }
-
-      // If we go back to very beginning
-      if (progress < 0.1) {
-        matrixScrolling = false;
-        portalActive = false;
-        
-        // Reset everything
-        resetPortalEffects(portalEffects);
-        resetMatrixChars(matrixChars);
-        resetTunnelParticles(tunnelParticles);
-        
-        // Reset monolith
-        monolith.material.opacity = 1;
-        slitGlow.material.opacity = 0;
-        
-        // Reset camera
-        cameraFrozen = false;
-      }
-    }
-  },
-});
+// Reset portal position at end for reverse
+tl.set(portalGroup.position, { z: PORTAL_CONFIG.position.z });
 
 // ============================================
 // RESIZE HANDLER

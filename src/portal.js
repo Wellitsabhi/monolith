@@ -8,16 +8,15 @@ import {
   createLightRayTexture,
   createCharacterTexture,
   createVortexTexture,
-  createEnergyRingTexture,
   CHARACTERS,
 } from '../functions/textures.js';
 
-// Monolith is ~12 units tall, matrix should be 20% = ~2.4 units
+// Monolith is ~12 units tall
 export const MONOLITH_HEIGHT = 12;
 
 export const PORTAL_CONFIG = {
   radius: 1.8,
-  position: { x: 1.8, y: -4.5, z: 1.5 }, // Bottom-right of monolith
+  position: { x: 2.5, y: -3.5, z: 1.5 }, // Bottom-right of monolith, moved right and up
   darkCloudCount: 60,
   dustCount: 80,
   sparkCount: 50,
@@ -29,13 +28,13 @@ export const PORTAL_CONFIG = {
 
 export const MATRIX_CONFIG = {
   columns: 4,
-  charsPerColumn: 12,
+  charsPerColumn: 20, // Cover full monolith height
   columnSpacing: 0.25,
-  charHeight: 0.2,
+  charHeight: 0.22,
   charSize: 0.15,
-  // Position at slit (front center of monolith, upper portion)
+  // Position at slit (front center of monolith)
   startZ: 1.35,
-  startY: 2,
+  startY: 0, // Centered on monolith
 };
 
 export const TUNNEL_CONFIG = {
@@ -54,7 +53,6 @@ export function createPortalEffects(portalGroup, textures) {
     lightRays: [],
     centerParticles: [],
     vortex: null,
-    energyRings: [],
   };
 
   // Vortex center
@@ -70,30 +68,6 @@ export function createPortalEffects(portalGroup, textures) {
   effects.vortex = new THREE.Mesh(vortexGeo, vortexMat);
   effects.vortex.position.z = -0.3;
   portalGroup.add(effects.vortex);
-
-  // Energy rings
-  const ringTexture = createEnergyRingTexture();
-  for (let i = 0; i < 3; i++) {
-    const scale = 0.8 + i * 0.4;
-    const ringGeo = new THREE.PlaneGeometry(PORTAL_CONFIG.radius * 2 * scale, PORTAL_CONFIG.radius * 2 * scale);
-    const ringMat = new THREE.MeshBasicMaterial({
-      map: ringTexture,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.position.z = -0.2 - i * 0.1;
-    ring.userData = {
-      rotationSpeed: 0.3 + i * 0.2,
-      pulseSpeed: 1.5 + i * 0.5,
-      phase: i * Math.PI / 3,
-      baseScale: scale,
-    };
-    effects.energyRings.push(ring);
-    portalGroup.add(ring);
-  }
 
   // Dark clouds
   for (let i = 0; i < PORTAL_CONFIG.darkCloudCount; i++) {
@@ -469,20 +443,12 @@ export function createTunnelParticles(scene, textures) {
 export function animatePortalEffects(effects, elapsed, delta, active) {
   if (!active) return;
 
-  const { darkClouds, portalParticles, sparks, sparkTrails, portalTextParticles, lightRays, centerParticles, vortex, energyRings } = effects;
+  const { darkClouds, portalParticles, sparks, sparkTrails, portalTextParticles, lightRays, centerParticles, vortex } = effects;
 
   // Vortex rotation
   if (vortex) {
     vortex.rotation.z -= delta * 0.3;
   }
-
-  // Energy rings
-  energyRings.forEach((ring) => {
-    const data = ring.userData;
-    ring.rotation.z += delta * data.rotationSpeed;
-    const pulse = 0.9 + 0.1 * Math.sin(elapsed * data.pulseSpeed + data.phase);
-    ring.scale.setScalar(pulse);
-  });
 
   darkClouds.forEach((cloud) => {
     const data = cloud.userData;
@@ -620,20 +586,13 @@ export function animateMatrixScroll(chars, charTextures, delta) {
 
 // Reset functions for bidirectional scroll
 export function resetPortalEffects(effects) {
-  const { darkClouds, portalParticles, sparks, sparkTrails, portalTextParticles, lightRays, centerParticles, vortex, energyRings } = effects;
+  const { darkClouds, portalParticles, sparks, sparkTrails, portalTextParticles, lightRays, centerParticles, vortex } = effects;
 
   // Reset vortex
   if (vortex) {
     vortex.rotation.z = 0;
     vortex.material.opacity = 0;
   }
-
-  // Reset energy rings
-  energyRings.forEach((ring) => {
-    ring.rotation.z = 0;
-    ring.scale.setScalar(ring.userData.baseScale);
-    ring.material.opacity = 0;
-  });
 
   // Reset all particles to initial positions
   [...darkClouds, ...portalParticles, ...sparks, ...portalTextParticles, ...centerParticles].forEach((item) => {
@@ -703,10 +662,9 @@ export function resetTunnelParticles(particles) {
 }
 
 export function setAllVisible(effects, matrixChars, tunnelParticles, visible) {
-  const { darkClouds, portalParticles, sparks, sparkTrails, portalTextParticles, lightRays, centerParticles, vortex, energyRings } = effects;
+  const { darkClouds, portalParticles, sparks, sparkTrails, portalTextParticles, lightRays, centerParticles, vortex } = effects;
 
   if (vortex) vortex.visible = visible;
-  energyRings.forEach((r) => (r.visible = visible));
   darkClouds.forEach((c) => (c.visible = visible));
   portalParticles.forEach((p) => (p.visible = visible));
   sparks.forEach((s) => (s.visible = visible));
